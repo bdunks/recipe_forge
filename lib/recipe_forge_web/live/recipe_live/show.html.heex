@@ -1,0 +1,40 @@
+<.header>
+  Recipe {@recipe.id}
+  <:subtitle>This is a recipe record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/recipes/#{@recipe}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit recipe</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Name">{@recipe.name}</:item>
+  <:item title="Description">{@recipe.description}</:item>
+  <:item title="Prep time">{@recipe.prep_time}</:item>
+  <:item title="Cook time">{@recipe.cook_time}</:item>
+  <:item title="Servings">{@recipe.servings}</:item>
+  <:item title="Yield description">{@recipe.yield_description}</:item>
+  <:item title="Image url">{@recipe.image_url}</:item>
+  <:item title="Notes">{@recipe.notes}</:item>
+  <:item title="Instructions">{@recipe.instructions}</:item>
+  <:item title="Nutrition">{@recipe.nutrition}</:item>
+</.list>
+
+<.back navigate={~p"/recipes"}>Back to recipes</.back>
+
+<.modal
+  :if={@live_action == :edit}
+  id="recipe-modal"
+  show
+  on_cancel={JS.patch(~p"/recipes/#{@recipe}")}
+>
+  <.live_component
+    module={RecipeForgeWeb.RecipeLive.FormComponent}
+    id={@recipe.id}
+    title={@page_title}
+    action={@live_action}
+    recipe={@recipe}
+    patch={~p"/recipes/#{@recipe}"}
+  />
+</.modal>

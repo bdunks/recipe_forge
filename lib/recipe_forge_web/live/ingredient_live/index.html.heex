@@ -1,0 +1,41 @@
+<.header>
+  Listing Ingredients
+  <:actions>
+    <.link patch={~p"/ingredients/new"}>
+      <.button>New Ingredient</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="ingredients"
+  rows={@streams.ingredients}
+  row_click={fn {_id, ingredient} -> JS.navigate(~p"/ingredients/#{ingredient}") end}
+>
+  <:col :let={{_id, ingredient}} label="Name">{ingredient.name}</:col>
+  <:action :let={{_id, ingredient}}>
+    <div class="sr-only">
+      <.link navigate={~p"/ingredients/#{ingredient}"}>Show</.link>
+    </div>
+    <.link patch={~p"/ingredients/#{ingredient}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={{id, ingredient}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: ingredient.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal :if={@live_action in [:new, :edit]} id="ingredient-modal" show on_cancel={JS.patch(~p"/ingredients")}>
+  <.live_component
+    module={RecipeForgeWeb.IngredientLive.FormComponent}
+    id={@ingredient.id || :new}
+    title={@page_title}
+    action={@live_action}
+    ingredient={@ingredient}
+    patch={~p"/ingredients"}
+  />
+</.modal>
