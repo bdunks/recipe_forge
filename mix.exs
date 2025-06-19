@@ -50,6 +50,7 @@ defmodule RecipeForge.MixProject do
        app: false,
        compile: false,
        depth: 1},
+      {:mishka_chelekom, "~> 0.0.5", only: :dev},
       {:swoosh, "~> 1.5"},
       {:finch, "~> 0.13"},
       {:telemetry_metrics, "~> 1.0"},

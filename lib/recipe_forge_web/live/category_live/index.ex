@@ -5,6 +5,7 @@ defmodule RecipeForgeWeb.CategoryLive.Index do
   alias RecipeForge.Recipes.Category
 
   @impl true
+  @spec mount(any(), any(), Phoenix.LiveView.Socket.t()) :: {:ok, Phoenix.LiveView.Socket.t()}
   def mount(_params, _session, socket) do
     {:ok, stream(socket, :categories, Recipes.list_categories())}
   end

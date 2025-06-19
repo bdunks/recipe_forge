@@ -39,6 +39,8 @@ defmodule RecipeForgeWeb.Router do
 
     live "/recipes/:id", RecipeLive.Show, :show
     live "/recipes/:id/show/edit", RecipeLive.Show, :edit
+
+    live "/ai_generate", AiGenerateLive.Index, :index
   end
 
   # Other scopes may use custom stacks.

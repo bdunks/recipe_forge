@@ -1,7 +1,6 @@
 defmodule RecipeForge.Recipes.Recipe do
   use Ecto.Schema
   import Ecto.Changeset
-  import Ecto.Query
 
   alias RecipeForge.Recipes.{Category, Ingredient, RecipeIngredient}
 
@@ -19,16 +18,14 @@ defmodule RecipeForge.Recipes.Recipe do
     field :notes, :string
     field :nutrition, :map
 
-    # Join struct association (for quantity/unit data)
-    # Delete join entries if recipe deleted
     has_many :recipe_ingredients, RecipeIngredient, on_delete: :delete_all
-
-    # Convenience association (reads through recipe_ingredients)
     many_to_many :ingredients, Ingredient, join_through: RecipeIngredient, on_replace: :delete
-
-    # Standard many_to_many
     many_to_many :categories, Category, join_through: "recipe_categories", on_replace: :delete
 
+    # virtual field to accept IDs from the form
+    field :category_tags, :string, virtual: true
+
+    # TODO _usec
     timestamps(type: :utc_datetime)
   end
 
@@ -44,9 +41,12 @@ defmodule RecipeForge.Recipes.Recipe do
       :yield_description,
       :image_url,
       :notes,
-      :instructions,
-      :nutrition
+      :nutrition,
+      # Virtual field
+      :category_tags
     ])
+    |> cast_instructions(attrs)
+    |> cast_assoc(:recipe_ingredients, with: &RecipeIngredient.changeset/2)
     |> validate_required([
       :name,
       :description,
@@ -54,28 +54,23 @@ defmodule RecipeForge.Recipes.Recipe do
       :yield_description,
       :instructions
     ])
-
-    # -- Association Hnadling
-    |> cast_assoc_categories(attrs)
-    |> cast_assoc_ingredients(attrs)
   end
 
-  defp cast_assoc_categories(changeset, attrs) do
-    case attrs do
-      %{"category_ids" => category_ids} ->
-        put_assoc(changeset, :categories, get_categories_by_id(category_ids))
-
-      _ ->
-        # No categories passed, do nothing
-        changeset
-    end
+  # This function handles the transformation for the :instructions field.
+  defp cast_instructions(changeset, %{"instructions" => instructions})
+       when is_binary(instructions) do
+    # If "instructions" is a string, split it and put it in the changeset.
+    lines = String.split(instructions, ~r/\R/, trim: true)
+    put_change(changeset, :instructions, lines)
   end
 
-  defp get_categories_by_id(ids) do
-    RecipeForge.Repo.all(from c in Category, where: c.id in ^ids)
+  defp cast_instructions(changeset, %{"instructions" => instructions})
+       when is_list(instructions) do
+    put_change(changeset, :instructions, instructions)
   end
 
-  defp cast_assoc_ingredients(changeset, _attrs) do
-    cast_assoc(changeset, :recipe_ingredients, sort_param: :display_order, required: false)
+  defp cast_instructions(changeset, _attrs) do
+    # If "instructions" isn't in the params or isn't a string, do nothing.
+    changeset
   end
 end

@@ -35,3 +35,11 @@ recipe_forge-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# Keys and other secrets, typically stored in env for prod
+/config/*.secrets.exs
+
+# Livebook files
+*.livemd
+
+# Misc Utilities and Datafiles
+/local_toolchain/*

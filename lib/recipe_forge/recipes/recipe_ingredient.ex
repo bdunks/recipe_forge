@@ -20,7 +20,7 @@ defmodule RecipeForge.Recipes.RecipeIngredient do
   def changeset(recipe_ingredient, attrs) do
     recipe_ingredient
     |> cast(attrs, [:quantity, :unit, :notes, :display_order, :recipe_id, :ingredient_id])
-    |> validate_required([:quantity, :unit, :recipe_id, :ingredient_id])
+    |> validate_required([:quantity, :unit, :ingredient_id])
     |> validate_number(:quantity, greater_than: 0)
     |> foreign_key_constraint(:recipe_id)
     |> foreign_key_constraint(:ingredient_id)

@@ -17,8 +17,16 @@
   <:item title="Yield description">{@recipe.yield_description}</:item>
   <:item title="Image url">{@recipe.image_url}</:item>
   <:item title="Notes">{@recipe.notes}</:item>
-  <:item title="Instructions">{@recipe.instructions}</:item>
-  <:item title="Nutrition">{@recipe.nutrition}</:item>
+  <:item title="Instructions">
+    <ol>
+      <li :for={instruction <- @recipe.instructions}>{instruction}</li>
+    </ol>
+  </:item>
+  <:item title="Categories">
+    <ul>
+      <li :for={category <- @recipe.categories}>{category.name}</li>
+    </ul>
+  </:item>
 </.list>
 
 <.back navigate={~p"/recipes"}>Back to recipes</.back>
