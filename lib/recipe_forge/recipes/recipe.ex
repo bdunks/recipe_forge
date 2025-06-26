@@ -2,7 +2,9 @@ defmodule RecipeForge.Recipes.Recipe do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias RecipeForge.Recipes.{Category, Ingredient, RecipeIngredient}
+  alias RecipeForge.Recipes.RecipeIngredient
+  alias RecipeForge.Ingredients.Ingredient
+  alias RecipeForge.Categories.Category
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -18,15 +20,14 @@ defmodule RecipeForge.Recipes.Recipe do
     field :notes, :string
     field :nutrition, :map
 
-    has_many :recipe_ingredients, RecipeIngredient, on_delete: :delete_all
+    has_many :recipe_ingredients, RecipeIngredient, on_replace: :delete
     many_to_many :ingredients, Ingredient, join_through: RecipeIngredient, on_replace: :delete
     many_to_many :categories, Category, join_through: "recipe_categories", on_replace: :delete
 
     # virtual field to accept IDs from the form
     field :category_tags, :string, virtual: true
 
-    # TODO _usec
-    timestamps(type: :utc_datetime)
+    timestamps(type: :utc_datetime_usec)
   end
 
   @doc false
@@ -41,12 +42,15 @@ defmodule RecipeForge.Recipes.Recipe do
       :yield_description,
       :image_url,
       :notes,
-      :nutrition,
-      # Virtual field
-      :category_tags
+      :nutrition
+      # :category_tags
     ])
     |> cast_instructions(attrs)
-    |> cast_assoc(:recipe_ingredients, with: &RecipeIngredient.changeset/2)
+    |> cast_assoc(:recipe_ingredients,
+      with: &RecipeIngredient.changeset/2
+    )
+    # The context provides a `categories` key with the structs ready for association.
+    |> put_assoc(:categories, Map.get(attrs, "categories", []))
     |> validate_required([
       :name,
       :description,

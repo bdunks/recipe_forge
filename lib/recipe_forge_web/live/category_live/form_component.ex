@@ -1,7 +1,7 @@
 defmodule RecipeForgeWeb.CategoryLive.FormComponent do
   use RecipeForgeWeb, :live_component
 
-  alias RecipeForge.Recipes
+  alias RecipeForge.Categories
 
   @impl true
   def render(assigns) do
@@ -34,13 +34,13 @@ defmodule RecipeForgeWeb.CategoryLive.FormComponent do
      socket
      |> assign(assigns)
      |> assign_new(:form, fn ->
-       to_form(Recipes.change_category(category))
+       to_form(Categories.change_category(category))
      end)}
   end
 
   @impl true
   def handle_event("validate", %{"category" => category_params}, socket) do
-    changeset = Recipes.change_category(socket.assigns.category, category_params)
+    changeset = Categories.change_category(socket.assigns.category, category_params)
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
@@ -49,7 +49,7 @@ defmodule RecipeForgeWeb.CategoryLive.FormComponent do
   end
 
   defp save_category(socket, :edit, category_params) do
-    case Recipes.update_category(socket.assigns.category, category_params) do
+    case Categories.update_category(socket.assigns.category, category_params) do
       {:ok, category} ->
         notify_parent({:saved, category})
 
@@ -64,7 +64,7 @@ defmodule RecipeForgeWeb.CategoryLive.FormComponent do
   end
 
   defp save_category(socket, :new, category_params) do
-    case Recipes.create_category(category_params) do
+    case Categories.create_category(category_params) do
       {:ok, category} ->
         notify_parent({:saved, category})
 

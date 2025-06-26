@@ -4,18 +4,15 @@ defmodule RecipeForge.Recipes do
   """
 
   import Ecto.Query, warn: false
+
+  alias RecipeForge.Categories
+  alias RecipeForge.Ingredients
   alias RecipeForge.Repo
 
   alias RecipeForge.Recipes.Recipe
 
   @doc """
   Returns the list of recipes.
-
-  ## Examples
-
-      iex> list_recipes()
-      [%Recipe{}, ...]
-
   """
   def list_recipes do
     Repo.all(Recipe)
@@ -25,67 +22,79 @@ defmodule RecipeForge.Recipes do
   Gets a single recipe.
 
   Raises `Ecto.NoResultsError` if the Recipe does not exist.
-
-  ## Examples
-
-      iex> get_recipe!(123)
-      %Recipe{}
-
-      iex> get_recipe!(456)
-      ** (Ecto.NoResultsError)
-
   """
   def get_recipe!(id) do
-    Recipe |> Repo.get!(id) |> Repo.preload([:categories, :recipe_ingredients])
+    Recipe
+    |> Repo.get!(id)
+    |> Repo.preload([:categories, recipe_ingredients: :ingredient])
+  end
+
+  @doc """
+  Builds a recipe changeset for validation, resolving associations without side-effects.
+  """
+  def build_recipe_changeset(%Recipe{} = recipe, attrs) do
+    # These helpers return raw data (list/map of structs)
+    categories = Categories.build_from_form_attrs(attrs["category_tags"])
+    recipe_ingredients = Ingredients.build_from_form_attrs(attrs["recipe_ingredients"])
+
+    final_attrs =
+      attrs
+      |> Map.put("categories", categories)
+      |> Map.put("recipe_ingredients", recipe_ingredients)
+
+    Recipe.changeset(recipe, final_attrs)
   end
 
   @doc """
   Creates a recipe.
-
-  ## Examples
-
-      iex> create_recipe(%{field: value})
-      {:ok, %Recipe{}}
-
-      iex> create_recipe(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
   """
   def create_recipe(attrs \\ %{}) do
-    %Recipe{}
-    |> change_recipe(attrs)
-    |> Repo.insert()
+    Repo.transaction(fn ->
+      with {:ok, categories} <-
+             Categories.find_or_create_from_form_attrs(attrs["category_tags"]),
+           {:ok, recipe_ingredients} <-
+             Ingredients.find_or_create_from_form_attrs(attrs["recipe_ingredients"]) do
+        final_attrs =
+          attrs
+          |> Map.put("categories", categories)
+          |> Map.put("recipe_ingredients", recipe_ingredients)
+
+        %Recipe{}
+        |> Recipe.changeset(final_attrs)
+        |> Repo.insert()
+      end
+    end)
+    |> case do
+      {:ok, result} -> result
+      {:error, reason} -> reason
+    end
   end
 
+  # @spec update_recipe(%RecipeForge.Recipes.Recipe{optional(any()) => any()}, any()) :: any()
   @doc """
   Updates a recipe.
-
-  ## Examples
-
-      iex> update_recipe(recipe, %{field: new_value})
-      {:ok, %Recipe{}}
-
-      iex> update_recipe(recipe, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
   """
+
   def update_recipe(%Recipe{} = recipe, attrs) do
-    recipe
-    |> change_recipe(attrs)
-    |> Repo.update()
+    Repo.transaction(fn ->
+      with {:ok, categories} <-
+             Categories.find_or_create_from_form_attrs(attrs["category_tags"]),
+           {:ok, recipe_ingredients} <-
+             Ingredients.find_or_create_from_form_attrs(attrs["recipe_ingredients"]) do
+        final_attrs =
+          attrs
+          |> Map.put("categories", categories)
+          |> Map.put("recipe_ingredients", recipe_ingredients)
+
+        recipe
+        |> Recipe.changeset(final_attrs)
+        |> Repo.update()
+      end
+    end)
   end
 
   @doc """
   Deletes a recipe.
-
-  ## Examples
-
-      iex> delete_recipe(recipe)
-      {:ok, %Recipe{}}
-
-      iex> delete_recipe(recipe)
-      {:error, %Ecto.Changeset{}}
-
   """
   def delete_recipe(%Recipe{} = recipe) do
     Repo.delete(recipe)
@@ -93,25 +102,9 @@ defmodule RecipeForge.Recipes do
 
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking recipe changes.
-
-  ## Examples
-
-      iex> change_recipe(recipe)
-      %Ecto.Changeset{data: %Recipe{}}
-
   """
   def change_recipe(%Recipe{} = recipe, attrs \\ %{}) do
-    category_names =
-      attrs
-      |> Map.get("category_tags", "")
-      |> String.split(" ", trim: true)
-
-    categories = find_or_create_categories(category_names)
-
-    recipe
-    |> Repo.preload(:categories)
-    |> Recipe.changeset(attrs)
-    |> Ecto.Changeset.put_assoc(:categories, categories)
+    Recipe.changeset(recipe, attrs)
   end
 
   @doc """
@@ -125,42 +118,25 @@ defmodule RecipeForge.Recipes do
     category_tags =
       ai_data
       |> Map.get(:category_name, "AI Generated")
-      |> String.trim()
-      |> String.downcase()
 
-    # 2. Find or Create all Ingredients at once.
-    # The AI gives a list of maps like %{name: "flour", quantity: "1", unit: "cup"}
-    ingredients_list_from_ai = Map.get(ai_data, :ingredients, [])
-
-    # This returns a map of {lowercase_name => ingredient_struct} for easy lookup
-    all_ingredients_map = find_or_create_ingredients(ingredients_list_from_ai)
-
-    # 3. Build the `recipe_ingredients` nested attributes.
+    # 2. Transform AI ingredients data into the format our context expects.
+    # AI format: `[%{name: "flour", ...}]`
+    # Context format: `[%{"ingredient_name" => "flour", ...}]`
     recipe_ingredients_attrs =
-      ingredients_list_from_ai
+      (ai_data[:ingredients] || [])
       |> Enum.with_index()
-      |> Enum.map(fn {ing_data, index} ->
-        # Find the full ingredient struct (with ID) from our map
-        ingredient_struct = all_ingredients_map[String.downcase(String.trim(ing_data.name || ""))]
-
-        # If ingredient was found/created, build the attributes for the join table
-        if ingredient_struct do
-          %{
-            "quantity" => Map.get(ing_data, :quantity),
-            "unit" => Map.get(ing_data, :unit),
-            "notes" => Map.get(ing_data, :notes),
-            "display_order" => index + 1,
-            "ingredient_id" => ingredient_struct.id
-          }
-        else
-          # If the ingredient name was blank, it won't be in the map.
-          # Return nil to be filtered out later.
-          nil
-        end
+      |> Enum.into(%{}, fn {ing_data, index} ->
+        {index,
+         %{
+           "ingredient_name" => Map.get(ing_data, :name),
+           "quantity" => Map.get(ing_data, :quantity),
+           "unit" => Map.get(ing_data, :unit),
+           "notes" => Map.get(ing_data, :notes),
+           "display_order" => index + 1
+         }}
       end)
-      |> Enum.reject(&is_nil/1)
 
-    # 4. Assemble the final attributes map for `create_recipe`.
+    # 3. Assemble the final attributes map for `create_recipe`.
     recipe_attrs =
       %{
         "name" => Map.get(ai_data, :name),
@@ -178,347 +154,7 @@ defmodule RecipeForge.Recipes do
         "recipe_ingredients" => recipe_ingredients_attrs
       }
 
-    # 5. Call the standard `create_recipe` function with the prepared attributes.
+    # 4. Call the standard `create_recipe` function with the prepared attributes.
     create_recipe(recipe_attrs)
-  end
-
-  alias RecipeForge.Recipes.Category
-
-  @doc """
-  Returns the list of categories.
-
-  ## Examples
-
-      iex> list_categories()
-      [%Category{}, ...]
-
-  """
-  def list_categories do
-    Repo.all(Category)
-  end
-
-  @doc """
-  Gets a single category.
-
-  Raises `Ecto.NoResultsError` if the Category does not exist.
-
-  ## Examples
-
-      iex> get_category!(123)
-      %Category{}
-
-      iex> get_category!(456)
-      ** (Ecto.NoResultsError)
-
-  """
-  def get_category!(id), do: Repo.get!(Category, id)
-
-  @doc """
-  Retrieves a list of categories by their IDs.
-
-  ## Examples
-
-      iex> list_categories_by_ids([1, 2, 3])
-      [%Category{}, ...]
-
-      iex> list_categories_by_ids([])
-      []
-  """
-  def get_categories_by_ids(category_ids) when is_list(category_ids) do
-    Repo.all(from c in Category, where: c.id in ^category_ids)
-  end
-
-  def get_categories_by_ids(nil), do: []
-
-  @doc """
-  Creates a category.
-
-  ## Examples
-
-      iex> create_category(%{field: value})
-      {:ok, %Category{}}
-
-      iex> create_category(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_category(attrs \\ %{}) do
-    %Category{}
-    |> Category.changeset(attrs)
-    |> Repo.insert()
-  end
-
-  @doc """
-  Updates a category.
-
-  ## Examples
-
-      iex> update_category(category, %{field: new_value})
-      {:ok, %Category{}}
-
-      iex> update_category(category, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def update_category(%Category{} = category, attrs) do
-    category
-    |> Category.changeset(attrs)
-    |> Repo.update()
-  end
-
-  @doc """
-  Deletes a category.
-
-  ## Examples
-
-      iex> delete_category(category)
-      {:ok, %Category{}}
-
-      iex> delete_category(category)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_category(%Category{} = category) do
-    Repo.delete(category)
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking category changes.
-
-  ## Examples
-
-      iex> change_category(category)
-      %Ecto.Changeset{data: %Category{}}
-
-  """
-  def change_category(%Category{} = category, attrs \\ %{}) do
-    Category.changeset(category, attrs)
-  end
-
-  @doc """
-  Create a chancset for validation only.
-  It finds existing categories but does NOT create new ones.
-  """
-  def validate_recipe_changeset(%Recipe{} = recipe, attrs \\ %{}) do
-    category_names =
-      attrs
-      |> Map.get("category_tags", "")
-      |> String.split(" ", trim: true)
-
-    categories = find_categories_by_name(category_names)
-
-    recipe
-    |> Repo.preload(:categories)
-    |> Recipe.changeset(attrs)
-    |> Ecto.Changeset.put_assoc(:categories, categories)
-  end
-
-  defp sanitize_category_names(names) when is_list(names) do
-    names
-    |> Enum.map(&String.trim/1)
-    |> Enum.reject(&(&1 == ""))
-    |> Enum.map(&String.downcase/1)
-    |> Enum.uniq()
-  end
-
-  # Finds reates categories from a list of names.
-  defp find_categories_by_name(names) when is_list(names) do
-    sanitized_names = sanitize_category_names(names)
-
-    if Enum.empty?(sanitized_names) do
-      []
-    else
-      # 2. Find existing categories
-      Repo.all(from c in Category, where: c.name in ^sanitized_names)
-    end
-  end
-
-  # Finds or creates categories from a list of names.
-  defp find_or_create_categories(names) when is_list(names) do
-    sanitized_names = sanitize_category_names(names)
-
-    if Enum.empty?(sanitized_names) do
-      []
-    else
-      # 2. Find existing categories
-      existing = Repo.all(from c in Category, where: c.name in ^sanitized_names)
-      existing_names = Map.new(existing, &{&1.name, true})
-
-      # 3. Determine which names are for new categories.
-      new_names = Enum.reject(sanitized_names, &existing_names[&1])
-
-      # 4. Create all new categories in a single, efficient database call.
-      newly_created =
-        if Enum.any?(new_names) do
-          new_attrs =
-            Enum.map(new_names, fn name ->
-              # May require migration
-              # %{name: name}
-
-              %{
-                name: name,
-                inserted_at: DateTime.utc_now(),
-                updated_at: DateTime.utc_now()
-              }
-            end)
-
-          {_count, categories} =
-            Repo.insert_all(Category, new_attrs, returning: true, on_conflict: :nothing)
-
-          categories
-        else
-          []
-        end
-
-      # 5. Return the final, combined list of category structs.
-      existing ++ newly_created
-    end
-  end
-
-  alias RecipeForge.Recipes.Ingredient
-
-  @doc """
-  Returns the list of ingredients.
-
-  ## Examples
-
-      iex> list_ingredients()
-      [%Ingredient{}, ...]
-
-  """
-  def list_ingredients do
-    Repo.all(Ingredient)
-  end
-
-  @doc """
-  Gets a single ingredient.
-
-  Raises `Ecto.NoResultsError` if the Ingredient does not exist.
-
-  ## Examples
-
-      iex> get_ingredient!(123)
-      %Ingredient{}
-
-      iex> get_ingredient!(456)
-      ** (Ecto.NoResultsError)
-
-  """
-  def get_ingredient!(id), do: Repo.get!(Ingredient, id)
-
-  @doc """
-  Creates a ingredient.
-
-  ## Examples
-
-      iex> create_ingredient(%{field: value})
-      {:ok, %Ingredient{}}
-
-      iex> create_ingredient(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_ingredient(attrs \\ %{}) do
-    %Ingredient{}
-    |> Ingredient.changeset(attrs)
-    |> Repo.insert()
-  end
-
-  @doc """
-  Updates a ingredient.
-
-  ## Examples
-
-      iex> update_ingredient(ingredient, %{field: new_value})
-      {:ok, %Ingredient{}}
-
-      iex> update_ingredient(ingredient, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def update_ingredient(%Ingredient{} = ingredient, attrs) do
-    ingredient
-    |> Ingredient.changeset(attrs)
-    |> Repo.update()
-  end
-
-  @doc """
-  Deletes a ingredient.
-
-  ## Examples
-
-      iex> delete_ingredient(ingredient)
-      {:ok, %Ingredient{}}
-
-      iex> delete_ingredient(ingredient)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_ingredient(%Ingredient{} = ingredient) do
-    Repo.delete(ingredient)
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking ingredient changes.
-
-  ## Examples
-
-      iex> change_ingredient(ingredient)
-      %Ecto.Changeset{data: %Ingredient{}}
-
-  """
-  def change_ingredient(%Ingredient{} = ingredient, attrs \\ %{}) do
-    Ingredient.changeset(ingredient, attrs)
-  end
-
-  # Finds or creates ingredients from a list of data maps.
-  defp find_or_create_ingredients(ingredients_data) when is_list(ingredients_data) do
-    # Extract names, sanitize them.
-    ingredient_names =
-      ingredients_data
-      |> Enum.map(&(&1.name |> to_string() |> String.trim()))
-      |> Enum.reject(&(&1 == ""))
-      |> Enum.map(&String.downcase/1)
-      |> Enum.uniq()
-
-    if Enum.empty?(ingredient_names) do
-      # Return an empty map if no valid names
-      %{}
-    else
-      # Find existing ingredients
-      existing = Repo.all(from i in Ingredient, where: i.name in ^ingredient_names)
-      # Create a map of {name => ingredient_struct} for easy lookup
-      existing_map = Map.new(existing, &{&1.name, &1})
-
-      # Find which names are new
-      existing_names_set = Map.new(existing, &{&1.name, true})
-      new_names = Enum.reject(ingredient_names, &existing_names_set[&1])
-
-      # Create new ingredients
-      newly_created =
-        if Enum.any?(new_names) do
-          new_attrs =
-            Enum.map(new_names, fn name ->
-              %{
-                name: name,
-                inserted_at: DateTime.utc_now(),
-                updated_at: DateTime.utc_now()
-              }
-            end)
-
-          {_count, ingredients} =
-            Repo.insert_all(Ingredient, new_attrs, returning: true, on_conflict: :nothing)
-
-          ingredients
-        else
-          []
-        end
-
-      # Create a map of the newly created ingredients {name => struct}
-      newly_created_map = Map.new(newly_created, &{&1.name, &1})
-
-      # Merge the maps of existing and new ingredients
-      Map.merge(existing_map, newly_created_map)
-    end
   end
 end

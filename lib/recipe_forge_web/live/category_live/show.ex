@@ -1,7 +1,7 @@
 defmodule RecipeForgeWeb.CategoryLive.Show do
   use RecipeForgeWeb, :live_view
 
-  alias RecipeForge.Recipes
+  alias RecipeForge.Categories
 
   @impl true
   def mount(_params, _session, socket) do
@@ -13,7 +13,7 @@ defmodule RecipeForgeWeb.CategoryLive.Show do
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:category, Recipes.get_category!(id))}
+     |> assign(:category, Categories.get_category!(id))}
   end
 
   defp page_title(:show), do: "Show Category"

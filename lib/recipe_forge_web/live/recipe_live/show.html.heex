@@ -27,6 +27,14 @@
       <li :for={category <- @recipe.categories}>{category.name}</li>
     </ul>
   </:item>
+  <:item title="Ingredients">
+    <ul>
+      <li :for={ri <- @recipe.recipe_ingredients}>
+        {ri.quantity} {ri.unit} - {ri.ingredient.name}
+        <span :if={ri.notes} class="text-gray-500">- {ri.notes}</span>
+      </li>
+    </ul>
+  </:item>
 </.list>
 
 <.back navigate={~p"/recipes"}>Back to recipes</.back>

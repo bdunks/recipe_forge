@@ -1,7 +1,7 @@
 defmodule RecipeForgeWeb.IngredientLive.FormComponent do
   use RecipeForgeWeb, :live_component
 
-  alias RecipeForge.Recipes
+  alias RecipeForge.Ingredients
 
   @impl true
   def render(assigns) do
@@ -34,13 +34,13 @@ defmodule RecipeForgeWeb.IngredientLive.FormComponent do
      socket
      |> assign(assigns)
      |> assign_new(:form, fn ->
-       to_form(Recipes.change_ingredient(ingredient))
+       to_form(Ingredients.change_ingredient(ingredient))
      end)}
   end
 
   @impl true
   def handle_event("validate", %{"ingredient" => ingredient_params}, socket) do
-    changeset = Recipes.change_ingredient(socket.assigns.ingredient, ingredient_params)
+    changeset = Ingredients.change_ingredient(socket.assigns.ingredient, ingredient_params)
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
@@ -49,7 +49,7 @@ defmodule RecipeForgeWeb.IngredientLive.FormComponent do
   end
 
   defp save_ingredient(socket, :edit, ingredient_params) do
-    case Recipes.update_ingredient(socket.assigns.ingredient, ingredient_params) do
+    case Ingredients.update_ingredient(socket.assigns.ingredient, ingredient_params) do
       {:ok, ingredient} ->
         notify_parent({:saved, ingredient})
 
@@ -64,7 +64,7 @@ defmodule RecipeForgeWeb.IngredientLive.FormComponent do
   end
 
   defp save_ingredient(socket, :new, ingredient_params) do
-    case Recipes.create_ingredient(ingredient_params) do
+    case Ingredients.create_ingredient(ingredient_params) do
       {:ok, ingredient} ->
         notify_parent({:saved, ingredient})
 

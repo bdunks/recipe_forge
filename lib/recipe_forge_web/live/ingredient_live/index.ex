@@ -1,12 +1,12 @@
 defmodule RecipeForgeWeb.IngredientLive.Index do
   use RecipeForgeWeb, :live_view
 
-  alias RecipeForge.Recipes
-  alias RecipeForge.Recipes.Ingredient
+  alias RecipeForge.Ingredients
+  alias RecipeForge.Ingredients.Ingredient
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :ingredients, Recipes.list_ingredients())}
+    {:ok, stream(socket, :ingredients, Ingredients.list_ingredients())}
   end
 
   @impl true
@@ -17,7 +17,7 @@ defmodule RecipeForgeWeb.IngredientLive.Index do
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit Ingredient")
-    |> assign(:ingredient, Recipes.get_ingredient!(id))
+    |> assign(:ingredient, Ingredients.get_ingredient!(id))
   end
 
   defp apply_action(socket, :new, _params) do
@@ -39,8 +39,8 @@ defmodule RecipeForgeWeb.IngredientLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    ingredient = Recipes.get_ingredient!(id)
-    {:ok, _} = Recipes.delete_ingredient(ingredient)
+    ingredient = Ingredients.get_ingredient!(id)
+    {:ok, _} = Ingredients.delete_ingredient(ingredient)
 
     {:noreply, stream_delete(socket, :ingredients, ingredient)}
   end

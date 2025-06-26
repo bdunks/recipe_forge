@@ -24,7 +24,6 @@ defmodule RecipeForgeWeb.AiGenerateLive.Index do
     if prompt == "" do
       {:noreply, apply_error(socket, :prompt, "Please enter a recipe idea.")}
     else
-      # TODO - test assign generated_recipe_data: nil?
       socket = socket |> apply_loading() |> assign(prompt: prompt)
 
       case AI.generate_recipe_from_prompt(prompt) do
@@ -54,7 +53,7 @@ defmodule RecipeForgeWeb.AiGenerateLive.Index do
             {:noreply,
              socket
              |> apply_success()
-             |> assign(generated_recippe_data: nil)
+             |> assign(generated_recipe_data: nil)
              |> put_flash(:info, "Recipe '#{saved_recipe.name}' created succesfully")
              |> push_navigate(to: ~p"/recipes/#{saved_recipe.id}")}
 
@@ -74,8 +73,6 @@ defmodule RecipeForgeWeb.AiGenerateLive.Index do
   end
 
   defp apply_errors(socket, errors_map) do
-    IO.inspect(errors_map)
-
     socket
     |> assign(errors: errors_map)
     |> assign(loading: false)

@@ -43,8 +43,6 @@ defmodule RecipeForge.AI do
     # 5. Handle {:error, reason} -> Return {:error, "Reason"}
     # Placeholder:
 
-    # Simulate using prompt_text to silence that warning
-    IO.inspect(prompt_text, label: "AI Prompt Received")
     # --- TEMPORARY PLACEHOLDER ---
     # Simulate a successful response structure for now
     # This allows the {:ok, ...} clause in the LiveView to be reachable

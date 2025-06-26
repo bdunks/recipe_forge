@@ -1,7 +1,7 @@
 defmodule RecipeForgeWeb.IngredientLive.Show do
   use RecipeForgeWeb, :live_view
 
-  alias RecipeForge.Recipes
+  alias RecipeForge.Ingredients
 
   @impl true
   def mount(_params, _session, socket) do
@@ -13,7 +13,7 @@ defmodule RecipeForgeWeb.IngredientLive.Show do
     {:noreply,
      socket
      |> assign(:page_title, page_title(socket.assigns.live_action))
-     |> assign(:ingredient, Recipes.get_ingredient!(id))}
+     |> assign(:ingredient, Ingredients.get_ingredient!(id))}
   end
 
   defp page_title(:show), do: "Show Ingredient"

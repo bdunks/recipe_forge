@@ -1,13 +1,13 @@
 defmodule RecipeForgeWeb.CategoryLive.Index do
   use RecipeForgeWeb, :live_view
 
-  alias RecipeForge.Recipes
-  alias RecipeForge.Recipes.Category
+  alias RecipeForge.Categories
+  alias RecipeForge.Categories.Category
 
   @impl true
   @spec mount(any(), any(), Phoenix.LiveView.Socket.t()) :: {:ok, Phoenix.LiveView.Socket.t()}
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :categories, Recipes.list_categories())}
+    {:ok, stream(socket, :categories, Categories.list_categories())}
   end
 
   @impl true
@@ -18,7 +18,7 @@ defmodule RecipeForgeWeb.CategoryLive.Index do
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit Category")
-    |> assign(:category, Recipes.get_category!(id))
+    |> assign(:category, Categories.get_category!(id))
   end
 
   defp apply_action(socket, :new, _params) do
@@ -40,8 +40,8 @@ defmodule RecipeForgeWeb.CategoryLive.Index do
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    category = Recipes.get_category!(id)
-    {:ok, _} = Recipes.delete_category(category)
+    category = Categories.get_category!(id)
+    {:ok, _} = Categories.delete_category(category)
 
     {:noreply, stream_delete(socket, :categories, category)}
   end
