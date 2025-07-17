@@ -276,7 +276,7 @@ defmodule RecipeForgeWeb.CoreComponents do
   attr :type, :string,
     default: "text",
     values: ~w(checkbox color date datetime-local email file month number password
-               range search select tel text textarea time url week)
+               range search select tel text textarea time url week hidden_checkbox)
 
   attr :field, Phoenix.HTML.FormField,
     doc: "a form field struct retrieved from the form, for example: @form[:email]"
@@ -325,6 +325,27 @@ defmodule RecipeForgeWeb.CoreComponents do
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
+    """
+  end
+
+  def input(%{type: "hidden_checkbox"} = assigns) do
+    assigns =
+      assign_new(assigns, :checked, fn ->
+        Phoenix.HTML.Form.normalize_value("checkbox", assigns[:value])
+      end)
+
+    ~H"""
+    <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
+    <input
+      type="checkbox"
+      id={@id}
+      name={@name}
+      value="true"
+      checked={@checked}
+      class="hidden"
+      {@rest}
+    />
+    <.error :for={msg <- @errors}>{msg}</.error>
     """
   end
 
@@ -590,10 +611,11 @@ defmodule RecipeForgeWeb.CoreComponents do
   """
   attr :name, :string, required: true
   attr :class, :string, default: nil
+  attr :rest, :global
 
   def icon(%{name: "hero-" <> _} = assigns) do
     ~H"""
-    <span class={[@name, @class]} />
+    <span class={[@name, @class]} {@rest} />
     """
   end
 

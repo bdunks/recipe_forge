@@ -2,7 +2,7 @@ defmodule RecipeForgeWeb.CategoryLiveTest do
   use RecipeForgeWeb.ConnCase
 
   import Phoenix.LiveViewTest
-  import RecipeForge.RecipesFixtures
+  import RecipeForge.CategoriesFixtures
 
   @create_attrs %{name: "some name"}
   @update_attrs %{name: "some updated name"}

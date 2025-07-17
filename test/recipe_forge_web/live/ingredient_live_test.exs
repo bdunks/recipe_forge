@@ -2,7 +2,7 @@ defmodule RecipeForgeWeb.IngredientLiveTest do
   use RecipeForgeWeb.ConnCase
 
   import Phoenix.LiveViewTest
-  import RecipeForge.RecipesFixtures
+  import RecipeForge.IngredientsFixtures
 
   @create_attrs %{name: "some name"}
   @update_attrs %{name: "some updated name"}

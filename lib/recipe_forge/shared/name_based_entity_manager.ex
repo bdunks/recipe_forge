@@ -6,7 +6,10 @@ defmodule RecipeForge.Shared.NameBasedEntityManager do
   import Ecto.Query, warn: false
   alias RecipeForge.Repo
 
-  defp sanitize_names(names) when is_list(names) do
+  @doc """
+  Returns a normalized list of unique lowercase names, with whitespace trimed.  No blanks.
+  """
+  def sanitize_names(names) when is_list(names) do
     names
     |> Enum.map(&String.trim/1)
     |> Enum.reject(&(&1 == ""))
@@ -14,11 +17,11 @@ defmodule RecipeForge.Shared.NameBasedEntityManager do
     |> Enum.uniq()
   end
 
-  defp sanitize_names(names) when is_binary(names) do
+  def sanitize_names(names) when is_binary(names) do
     names |> String.split(" ", trim: true) |> sanitize_names()
   end
 
-  defp sanitize_names(_), do: []
+  def sanitize_names(_), do: []
 
   @doc """
   Generic builder.  Finds existing records and builds new, unsaved structs.
@@ -44,32 +47,6 @@ defmodule RecipeForge.Shared.NameBasedEntityManager do
         :existing => existing,
         :all => existing ++ newly_built
       }
-    end
-  end
-
-  @doc """
-  Generic find-or-create.  Persists new records to the database.
-  """
-  def find_or_create_from_names(schema_module, names) do
-    struct_map = build_from_names(schema_module, names)
-    new_structs = Map.get(struct_map, :built)
-
-    if Enum.any?(new_structs) do
-      # Convert "structus" to maps for `insert_all` and add timestamp
-      new_maps =
-        Enum.map(
-          new_structs,
-          fn struct ->
-            %{name: struct.name, inserted_at: DateTime.utc_now(), updated_at: DateTime.utc_now()}
-          end
-        )
-
-      {_count, persisted_structs} =
-        Repo.insert_all(schema_module, new_maps, returning: true)
-
-      {:ok, persisted_structs ++ Map.get(struct_map, :existing)}
-    else
-      {:ok, Map.get(struct_map, :all)}
     end
   end
 end

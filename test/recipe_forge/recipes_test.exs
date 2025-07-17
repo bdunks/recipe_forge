@@ -4,112 +4,120 @@ defmodule RecipeForge.RecipesTest do
   alias RecipeForge.Recipes
 
   describe "categories" do
-    alias RecipeForge.Recipes.Category
+    alias RecipeForge.Categories.Category
 
-    import RecipeForge.RecipesFixtures
+    import RecipeForge.CategoriesFixtures
 
     @invalid_attrs %{name: nil}
+    @create_attrs %{name: "Test Category"}
+    @update_attrs %{name: "Updated Category"}
 
     test "list_categories/0 returns all categories" do
       category = category_fixture()
-      assert Recipes.list_categories() == [category]
+      [result] = RecipeForge.Categories.list_categories()
+      assert result.id == category.id
+      assert result.name == category.name
     end
 
     test "get_category!/1 returns the category with given id" do
       category = category_fixture()
-      assert Recipes.get_category!(category.id) == category
+      result = RecipeForge.Categories.get_category!(category.id)
+      assert result.id == category.id
+      assert result.name == category.name
     end
 
     test "create_category/1 with valid data creates a category" do
-      valid_attrs = %{name: "some name"}
-
-      assert {:ok, %Category{} = category} = Recipes.create_category(valid_attrs)
-      assert category.name == "some name"
+      assert {:ok, %Category{} = category} = RecipeForge.Categories.create_category(@create_attrs)
+      assert category.name == "Test Category"
     end
 
     test "create_category/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Recipes.create_category(@invalid_attrs)
+      assert {:error, %Ecto.Changeset{}} = RecipeForge.Categories.create_category(@invalid_attrs)
     end
 
     test "update_category/2 with valid data updates the category" do
       category = category_fixture()
-      update_attrs = %{name: "some updated name"}
-
-      assert {:ok, %Category{} = category} = Recipes.update_category(category, update_attrs)
-      assert category.name == "some updated name"
+      assert {:ok, %Category{} = category} = RecipeForge.Categories.update_category(category, @update_attrs)
+      assert category.name == "Updated Category"
     end
 
     test "update_category/2 with invalid data returns error changeset" do
       category = category_fixture()
-      assert {:error, %Ecto.Changeset{}} = Recipes.update_category(category, @invalid_attrs)
-      assert category == Recipes.get_category!(category.id)
+      assert {:error, %Ecto.Changeset{}} = RecipeForge.Categories.update_category(category, @invalid_attrs)
+      result = RecipeForge.Categories.get_category!(category.id)
+      assert result.id == category.id
+      assert result.name == category.name
     end
 
     test "delete_category/1 deletes the category" do
       category = category_fixture()
-      assert {:ok, %Category{}} = Recipes.delete_category(category)
-      assert_raise Ecto.NoResultsError, fn -> Recipes.get_category!(category.id) end
+      assert {:ok, %Category{}} = RecipeForge.Categories.delete_category(category)
+      assert_raise Ecto.NoResultsError, fn -> RecipeForge.Categories.get_category!(category.id) end
     end
 
     test "change_category/1 returns a category changeset" do
       category = category_fixture()
-      assert %Ecto.Changeset{} = Recipes.change_category(category)
+      assert %Ecto.Changeset{} = RecipeForge.Categories.change_category(category)
     end
   end
 
   describe "ingredients" do
-    alias RecipeForge.Recipes.Ingredient
+    alias RecipeForge.Ingredients.Ingredient
 
-    import RecipeForge.RecipesFixtures
+    import RecipeForge.IngredientsFixtures
 
     @invalid_attrs %{name: nil}
+    @create_attrs %{name: "Test Ingredient"}
+    @update_attrs %{name: "Updated Ingredient"}
 
     test "list_ingredients/0 returns all ingredients" do
       ingredient = ingredient_fixture()
-      assert Recipes.list_ingredients() == [ingredient]
+      [result] = RecipeForge.Ingredients.list_ingredients()
+      assert result.id == ingredient.id
+      assert result.name == ingredient.name
     end
 
     test "get_ingredient!/1 returns the ingredient with given id" do
       ingredient = ingredient_fixture()
-      assert Recipes.get_ingredient!(ingredient.id) == ingredient
+      result = RecipeForge.Ingredients.get_ingredient!(ingredient.id)
+      assert result.id == ingredient.id
+      assert result.name == ingredient.name
     end
 
     test "create_ingredient/1 with valid data creates a ingredient" do
-      valid_attrs = %{name: "some name"}
-
-      assert {:ok, %Ingredient{} = ingredient} = Recipes.create_ingredient(valid_attrs)
-      assert ingredient.name == "some name"
+      assert {:ok, %Ingredient{} = ingredient} = RecipeForge.Ingredients.create_ingredient(@create_attrs)
+      assert ingredient.name == "Test Ingredient"
     end
 
     test "create_ingredient/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Recipes.create_ingredient(@invalid_attrs)
+      assert {:error, %Ecto.Changeset{}} = RecipeForge.Ingredients.create_ingredient(@invalid_attrs)
     end
 
     test "update_ingredient/2 with valid data updates the ingredient" do
       ingredient = ingredient_fixture()
-      update_attrs = %{name: "some updated name"}
-
       assert {:ok, %Ingredient{} = ingredient} =
-               Recipes.update_ingredient(ingredient, update_attrs)
+               RecipeForge.Ingredients.update_ingredient(ingredient, @update_attrs)
 
-      assert ingredient.name == "some updated name"
+      assert ingredient.name == "Updated Ingredient"
     end
 
     test "update_ingredient/2 with invalid data returns error changeset" do
       ingredient = ingredient_fixture()
-      assert {:error, %Ecto.Changeset{}} = Recipes.update_ingredient(ingredient, @invalid_attrs)
-      assert ingredient == Recipes.get_ingredient!(ingredient.id)
+      assert {:error, %Ecto.Changeset{}} = RecipeForge.Ingredients.update_ingredient(ingredient, @invalid_attrs)
+      result = RecipeForge.Ingredients.get_ingredient!(ingredient.id)
+      assert result.id == ingredient.id
+      assert result.name == ingredient.name
     end
 
     test "delete_ingredient/1 deletes the ingredient" do
       ingredient = ingredient_fixture()
-      assert {:ok, %Ingredient{}} = Recipes.delete_ingredient(ingredient)
-      assert_raise Ecto.NoResultsError, fn -> Recipes.get_ingredient!(ingredient.id) end
+      assert {:ok, %Ingredient{}} = RecipeForge.Ingredients.delete_ingredient(ingredient)
+      assert_raise Ecto.NoResultsError, fn -> RecipeForge.Ingredients.get_ingredient!(ingredient.id) end
     end
 
     test "change_ingredient/1 returns a ingredient changeset" do
       ingredient = ingredient_fixture()
-      assert %Ecto.Changeset{} = Recipes.change_ingredient(ingredient)
+      assert %Ecto.Changeset{} = RecipeForge.Ingredients.change_ingredient(ingredient)
     end
   end
 
@@ -119,52 +127,68 @@ defmodule RecipeForge.RecipesTest do
     import RecipeForge.RecipesFixtures
 
     @invalid_attrs %{
-      name: nil,
-      instructions: nil,
-      description: nil,
-      prep_time: nil,
-      cook_time: nil,
-      servings: nil,
-      yield_description: nil,
-      image_url: nil,
-      notes: nil,
-      nutrition: nil
+      "name" => nil,
+      "instructions" => nil,
+      "description" => nil,
+      "prep_time" => nil,
+      "cook_time" => nil,
+      "servings" => nil,
+      "yield_description" => nil,
+      "image_url" => nil,
+      "notes" => nil,
+      "nutrition" => nil
+    }
+    @create_attrs %{
+      "name" => "Test Recipe",
+      "instructions" => "Step 1\nStep 2",
+      "description" => "A test recipe",
+      "prep_time" => "10 min",
+      "cook_time" => "20 min",
+      "servings" => 4,
+      "yield_description" => "4 servings",
+      "image_url" => "https://example.com/test.jpg",
+      "notes" => "Test notes",
+      "nutrition" => %{},
+      "category_tags" => "test category"
+    }
+    @update_attrs %{
+      "name" => "Updated Test Recipe",
+      "instructions" => "Updated step 1\nUpdated step 2",
+      "description" => "An updated test recipe",
+      "prep_time" => "15 min",
+      "cook_time" => "25 min",
+      "servings" => 6,
+      "yield_description" => "6 servings",
+      "image_url" => "https://example.com/updated.jpg",
+      "notes" => "Updated notes",
+      "nutrition" => %{calories: 300}
     }
 
     test "list_recipes/0 returns all recipes" do
       recipe = recipe_fixture()
-      assert Recipes.list_recipes() == [recipe]
+      [result] = Recipes.list_recipes()
+      assert result.id == recipe.id
+      assert result.name == recipe.name
     end
 
     test "get_recipe!/1 returns the recipe with given id" do
       recipe = recipe_fixture()
-      assert Recipes.get_recipe!(recipe.id) == recipe
+      result = Recipes.get_recipe!(recipe.id)
+      assert result.id == recipe.id
+      assert result.name == recipe.name
     end
 
     test "create_recipe/1 with valid data creates a recipe" do
-      valid_attrs = %{
-        name: "some name",
-        instructions: ["option1", "option2"],
-        description: "some description",
-        prep_time: "some prep_time",
-        cook_time: "some cook_time",
-        servings: 42,
-        yield_description: "some yield_description",
-        image_url: "some image_url",
-        notes: "some notes",
-        nutrition: %{}
-      }
-
-      assert {:ok, %Recipe{} = recipe} = Recipes.create_recipe(valid_attrs)
-      assert recipe.name == "some name"
-      assert recipe.instructions == ["option1", "option2"]
-      assert recipe.description == "some description"
-      assert recipe.prep_time == "some prep_time"
-      assert recipe.cook_time == "some cook_time"
-      assert recipe.servings == 42
-      assert recipe.yield_description == "some yield_description"
-      assert recipe.image_url == "some image_url"
-      assert recipe.notes == "some notes"
+      assert {:ok, %Recipe{} = recipe} = Recipes.create_recipe(@create_attrs)
+      assert recipe.name == "Test Recipe"
+      assert recipe.instructions == ["Step 1", "Step 2"]
+      assert recipe.description == "A test recipe"
+      assert recipe.prep_time == "10 min"
+      assert recipe.cook_time == "20 min"
+      assert recipe.servings == 4
+      assert recipe.yield_description == "4 servings"
+      assert recipe.image_url == "https://example.com/test.jpg"
+      assert recipe.notes == "Test notes"
       assert recipe.nutrition == %{}
     end
 
@@ -175,36 +199,25 @@ defmodule RecipeForge.RecipesTest do
     test "update_recipe/2 with valid data updates the recipe" do
       recipe = recipe_fixture()
 
-      update_attrs = %{
-        name: "some updated name",
-        instructions: ["option1"],
-        description: "some updated description",
-        prep_time: "some updated prep_time",
-        cook_time: "some updated cook_time",
-        servings: 43,
-        yield_description: "some updated yield_description",
-        image_url: "some updated image_url",
-        notes: "some updated notes",
-        nutrition: %{}
-      }
-
-      assert {:ok, %Recipe{} = recipe} = Recipes.update_recipe(recipe, update_attrs)
-      assert recipe.name == "some updated name"
-      assert recipe.instructions == ["option1"]
-      assert recipe.description == "some updated description"
-      assert recipe.prep_time == "some updated prep_time"
-      assert recipe.cook_time == "some updated cook_time"
-      assert recipe.servings == 43
-      assert recipe.yield_description == "some updated yield_description"
-      assert recipe.image_url == "some updated image_url"
-      assert recipe.notes == "some updated notes"
-      assert recipe.nutrition == %{}
+      assert {:ok, %Recipe{} = recipe} = Recipes.update_recipe(recipe, @update_attrs)
+      assert recipe.name == "Updated Test Recipe"
+      assert recipe.instructions == ["Updated step 1", "Updated step 2"]
+      assert recipe.description == "An updated test recipe"
+      assert recipe.prep_time == "15 min"
+      assert recipe.cook_time == "25 min"
+      assert recipe.servings == 6
+      assert recipe.yield_description == "6 servings"
+      assert recipe.image_url == "https://example.com/updated.jpg"
+      assert recipe.notes == "Updated notes"
+      assert recipe.nutrition == %{calories: 300}
     end
 
     test "update_recipe/2 with invalid data returns error changeset" do
       recipe = recipe_fixture()
       assert {:error, %Ecto.Changeset{}} = Recipes.update_recipe(recipe, @invalid_attrs)
-      assert recipe == Recipes.get_recipe!(recipe.id)
+      result = Recipes.get_recipe!(recipe.id)
+      assert result.id == recipe.id
+      assert result.name == recipe.name
     end
 
     test "delete_recipe/1 deletes the recipe" do

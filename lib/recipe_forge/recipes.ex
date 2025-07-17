@@ -11,6 +11,15 @@ defmodule RecipeForge.Recipes do
 
   alias RecipeForge.Recipes.Recipe
 
+  @duplicate_ingredients_error "cannot contain duplicate ingredients"
+  @default_ai_category "AI_Generated"
+  @instruction_separator "\n"
+
+  @doc """
+  Returns the default AI category name.
+  """
+  def default_ai_category, do: @default_ai_category
+
   @doc """
   Returns the list of recipes.
   """
@@ -24,50 +33,15 @@ defmodule RecipeForge.Recipes do
   Raises `Ecto.NoResultsError` if the Recipe does not exist.
   """
   def get_recipe!(id) do
-    Recipe
-    |> Repo.get!(id)
+    Repo.get!(Recipe, id)
     |> Repo.preload([:categories, recipe_ingredients: :ingredient])
-  end
-
-  @doc """
-  Builds a recipe changeset for validation, resolving associations without side-effects.
-  """
-  def build_recipe_changeset(%Recipe{} = recipe, attrs) do
-    # These helpers return raw data (list/map of structs)
-    categories = Categories.build_from_form_attrs(attrs["category_tags"])
-    recipe_ingredients = Ingredients.build_from_form_attrs(attrs["recipe_ingredients"])
-
-    final_attrs =
-      attrs
-      |> Map.put("categories", categories)
-      |> Map.put("recipe_ingredients", recipe_ingredients)
-
-    Recipe.changeset(recipe, final_attrs)
   end
 
   @doc """
   Creates a recipe.
   """
   def create_recipe(attrs \\ %{}) do
-    Repo.transaction(fn ->
-      with {:ok, categories} <-
-             Categories.find_or_create_from_form_attrs(attrs["category_tags"]),
-           {:ok, recipe_ingredients} <-
-             Ingredients.find_or_create_from_form_attrs(attrs["recipe_ingredients"]) do
-        final_attrs =
-          attrs
-          |> Map.put("categories", categories)
-          |> Map.put("recipe_ingredients", recipe_ingredients)
-
-        %Recipe{}
-        |> Recipe.changeset(final_attrs)
-        |> Repo.insert()
-      end
-    end)
-    |> case do
-      {:ok, result} -> result
-      {:error, reason} -> reason
-    end
+    execute_recipe_transaction(%Recipe{}, attrs, :insert)
   end
 
   # @spec update_recipe(%RecipeForge.Recipes.Recipe{optional(any()) => any()}, any()) :: any()
@@ -76,21 +50,7 @@ defmodule RecipeForge.Recipes do
   """
 
   def update_recipe(%Recipe{} = recipe, attrs) do
-    Repo.transaction(fn ->
-      with {:ok, categories} <-
-             Categories.find_or_create_from_form_attrs(attrs["category_tags"]),
-           {:ok, recipe_ingredients} <-
-             Ingredients.find_or_create_from_form_attrs(attrs["recipe_ingredients"]) do
-        final_attrs =
-          attrs
-          |> Map.put("categories", categories)
-          |> Map.put("recipe_ingredients", recipe_ingredients)
-
-        recipe
-        |> Recipe.changeset(final_attrs)
-        |> Repo.update()
-      end
-    end)
+    execute_recipe_transaction(recipe, attrs, :update)
   end
 
   @doc """
@@ -114,35 +74,17 @@ defmodule RecipeForge.Recipes do
   the attributes for `create_recipe/1`.
   """
   def create_recipe_from_ai(ai_data) do
-    # 1. Prepare Category: Convert the AI-generated category name into the space-separated tag format.
-    category_tags =
-      ai_data
-      |> Map.get(:category_name, "AI Generated")
-
-    # 2. Transform AI ingredients data into the format our context expects.
-    # AI format: `[%{name: "flour", ...}]`
-    # Context format: `[%{"ingredient_name" => "flour", ...}]`
-    recipe_ingredients_attrs =
-      (ai_data[:ingredients] || [])
-      |> Enum.with_index()
-      |> Enum.into(%{}, fn {ing_data, index} ->
-        {index,
-         %{
-           "ingredient_name" => Map.get(ing_data, :name),
-           "quantity" => Map.get(ing_data, :quantity),
-           "unit" => Map.get(ing_data, :unit),
-           "notes" => Map.get(ing_data, :notes),
-           "display_order" => index + 1
-         }}
-      end)
-
-    # 3. Assemble the final attributes map for `create_recipe`.
     recipe_attrs =
       %{
         "name" => Map.get(ai_data, :name),
         "description" => Map.get(ai_data, :description),
         # The recipe changeset expects a single string for instructions
-        "instructions" => Map.get(ai_data, :instructions, []) |> Enum.join("\n"),
+        "instructions" => 
+          case Map.get(ai_data, :instructions, []) do
+            list when is_list(list) -> Enum.join(list, @instruction_separator)
+            string when is_binary(string) -> string
+            _ -> ""
+          end,
         "prep_time" => Map.get(ai_data, :prep_time),
         "cook_time" => Map.get(ai_data, :cook_time),
         "servings" => Map.get(ai_data, :servings),
@@ -150,11 +92,130 @@ defmodule RecipeForge.Recipes do
         "image_url" => Map.get(ai_data, :image_url),
         "notes" => Map.get(ai_data, :notes),
         "nutrition" => Map.get(ai_data, :nutrition),
-        "category_tags" => category_tags,
-        "recipe_ingredients" => recipe_ingredients_attrs
+        "category_tags" => Map.get(ai_data, :category_name, @default_ai_category),
+        "recipe_ingredients" =>
+          (ai_data[:ingredients] || [])
+          |> Enum.with_index()  # Start at 0 for display_order
+          |> Enum.into(%{}, fn {ing_data, index} ->
+            {Integer.to_string(index),
+             %{
+               "ingredient_name" => Map.get(ing_data, :name),
+               "quantity" => Map.get(ing_data, :quantity),
+               "unit" => Map.get(ing_data, :unit),
+               "notes" => Map.get(ing_data, :notes),
+               "display_order" => index  # Index starting at 0
+             }}
+          end)
       }
 
-    # 4. Call the standard `create_recipe` function with the prepared attributes.
     create_recipe(recipe_attrs)
   end
+
+  ##################################################################
+  # Private Helpers
+  ##################################################################
+
+  defp execute_recipe_transaction(recipe, attrs, action) do
+    repo_action = if action == :insert, do: &Repo.insert/1, else: &Repo.update/1
+    
+    case Repo.transaction(fn ->
+           case prepare_associations(attrs) do
+             {:ok, prepared_attrs} ->
+               recipe
+               |> Recipe.changeset(prepared_attrs, action: :save)
+               |> repo_action.()
+             
+             {:error, :duplicate_ingredients} ->
+               # Create proper error changeset and rollback
+               changeset = Recipe.changeset(recipe, attrs, action: :save)
+               error_changeset = %{changeset | 
+                 action: action, 
+                 valid?: false,
+                 errors: [recipe_ingredients: {@duplicate_ingredients_error, []}]
+               }
+               Repo.rollback(error_changeset)
+             
+             {:error, reason} ->
+               Repo.rollback(reason)
+           end
+         end) do
+      {:ok, result} ->
+        # Transaction completed successfully
+        result
+
+      {:error, changeset} when is_struct(changeset, Ecto.Changeset) ->
+        # Rollback returned a changeset (our duplicate ingredients error)
+        {:error, changeset}
+
+      {:error, _reason} ->
+        # Transaction was manually rolled back for other reasons
+        changeset = Recipe.changeset(recipe, attrs, action: :save)
+        {:error, %{changeset | action: action, valid?: false}}
+    end
+  end
+
+  defp prepare_associations(attrs) do
+    with {:ok, categories} <- Categories.find_or_create_from_names(attrs["category_tags"]),
+         :ok <- validate_no_duplicate_ingredient_names(attrs["recipe_ingredients"]),
+         {:ok, recipe_ingredients_attrs} <-
+           find_or_create_ingredients_for_recipe(attrs["recipe_ingredients"]) do
+      final_attrs =
+        attrs
+        |> Map.put("categories", categories)
+        |> Map.put("recipe_ingredients", recipe_ingredients_attrs)
+
+      {:ok, final_attrs}
+    end
+  end
+
+  defp find_or_create_ingredients_for_recipe(ingredients_attrs) when is_map(ingredients_attrs) do
+    # Process map directly, maintaining order by sorting keys
+    sorted_ingredients =
+      ingredients_attrs
+      |> Enum.sort_by(fn {index, _} -> String.to_integer(index) end)
+
+    # Process each ingredient while preserving map structure
+    Enum.reduce_while(sorted_ingredients, {:ok, %{}}, fn {index, i_attrs}, {:ok, acc} ->
+      # Skip ingredient creation if marked for destruction
+      if i_attrs["_destroy"] == "true" do
+        {:cont, {:ok, Map.put(acc, index, i_attrs)}}
+      else
+        case Ingredients.find_or_create_by_name(i_attrs["ingredient_name"]) do
+          {:ok, ingredient} ->
+            final_attrs = Map.put(i_attrs, "ingredient_id", ingredient.id)
+            {:cont, {:ok, Map.put(acc, index, final_attrs)}}
+
+          {:error, reason} ->
+            {:halt, {:error, reason}}
+        end
+      end
+    end)
+  end
+
+  # Handle empty/nil case
+  defp find_or_create_ingredients_for_recipe(ingredients_attrs),
+    do: {:ok, ingredients_attrs || %{}}
+
+  defp validate_no_duplicate_ingredient_names(ingredients_attrs) when is_map(ingredients_attrs) do
+    # Extract ingredient names from all non-destroyed ingredients
+    ingredient_names =
+      ingredients_attrs
+      |> Enum.reject(fn {_key, params} -> params["_destroy"] == "true" end)
+      |> Enum.map(fn {_key, params} -> 
+        String.trim(params["ingredient_name"] || "") |> String.downcase() 
+      end)
+      |> Enum.reject(fn name -> name == "" end)
+
+    # Check for duplicates
+    unique_names = Enum.uniq(ingredient_names)
+
+    if length(ingredient_names) != length(unique_names) do
+      # Return the proper error tuple directly
+      {:error, :duplicate_ingredients}
+    else
+      :ok
+    end
+  end
+
+  defp validate_no_duplicate_ingredient_names(_), do: :ok
 end
