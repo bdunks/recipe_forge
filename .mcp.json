@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "tidewave": {
+      "command": "c:/Users/quest/dev/mcp-proxy/mcp-proxy.exe",
+      "args": [
+        "http://localhost:4000/tidewave/mcp"
+      ]
+    }
+  }
+}

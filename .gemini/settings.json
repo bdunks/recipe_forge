@@ -1,0 +1,26 @@
+{
+    "mcpServers": {
+        // "hexdocs-mcp": {
+        //     "command": "npx",
+        //     "args": [
+        //         "-y",
+        //         "hexdocs-mcp@0.6.0"  ## NOTE: V.6 fixes a lot, but package not published
+        //     ]
+        // },
+        // "hexdocs-mcp-dev": {
+        //     "command": "node",
+        //     "args": [
+        //         "c:/Users/quest/dev/hexdocs-mcp/dist/index.js"
+        //     ],
+        //     "env": {
+        //         "NODE_ENV": "development"
+        //     }
+        // },
+        "tidewave": {
+            "command": "c:/Users/quest/dev/mcp-proxy/mcp-proxy.exe",
+            "args": [
+                "http://localhost:4000/tidewave/mcp"
+            ]
+        }
+    }
+}
