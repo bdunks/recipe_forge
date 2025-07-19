@@ -1,0 +1,33 @@
+{
+  "file_extensions": [
+    ".ex",
+    ".exs",
+    ".heex",
+    ".js",
+    ".css",
+    ".md",
+    ".json"
+  ],
+  "ignore_patterns": [
+    "_build",
+    "assets",
+    "deps",
+    "config",
+    "deps",
+    "priv",
+    "test",
+    "erl_crash.dump",
+    "*.ez",
+    ".fetch",
+    "*.log",
+    "mix.exs",
+    "mix.lock",
+    "*.livemd",
+    "CLAUDE.md"
+  ],
+  "max_file_size_mb": 2.0,
+  "include_hidden": false,
+  "max_depth": null,
+  "verbose": false,
+  "log_level": "INFO"
+}

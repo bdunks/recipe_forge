@@ -2,13 +2,6 @@
 
 RecipeForge is a Phoenix LiveView application for recipe management with AI integration capabilities.
 
-## Tech Stack
-
-- **Phoenix 1.7.21** with **LiveView 1.0** - Real-time interactive web applications
-- **Elixir 1.14+** with **PostgreSQL** database using UUID primary keys
-- **Tailwind CSS 3.4.3** + **ESBuild** for modern frontend assets
-- **Tidewave MCP** integration for enhanced development capabilities
-
 ## Core Principles
 
 - Write clean, concise, functional code using small, focused functions.
@@ -16,14 +9,11 @@ RecipeForge is a Phoenix LiveView application for recipe management with AI inte
 - **Single Responsibility**: Each module and function should do one thing well.
 - **Easy to Change**: Design for maintainability and future change.
 - **YAGNI**: Don't build features until they're needed.
-- **Modal-First UI**: All CRUD operations use modals instead of separate pages.
 
 ## Project Structure
 
 - **Phoenix Context Pattern**: Organize business logic into domain contexts (`RecipeForge.Recipes`, `RecipeForge.Categories`, `RecipeForge.Ingredients`).
 - **Separation of Core and UI**: Keep business logic in contexts separate from web layer in `RecipeForgeWeb`.
-- **Shared Utilities**: Common functionality in `RecipeForge.Shared` modules.
-- **Feature-Based Organization**: Group related functionality by domain (recipes, categories, ingredients).
 - **LiveView-First Web Layer**: Use LiveView for interactive UIs with CoreComponents for reusable elements.
 
 ## Coding Style

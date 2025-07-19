@@ -11,7 +11,10 @@
       "mcp__tidewave__search_package_docs",
       "Bash(mix compile)",
       "Bash(mix test:*)",
-      "Bash(mix help:*)"
+      "Bash(mix help:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(find:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

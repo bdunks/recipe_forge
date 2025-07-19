@@ -43,3 +43,5 @@ npm-debug.log
 
 # Misc Utilities and Datafiles
 /local_toolchain/*
+
+/llm_context/*
