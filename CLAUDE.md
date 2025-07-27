@@ -2,6 +2,16 @@
 
 RecipeForge is a Phoenix LiveView application for recipe management with AI integration capabilities.
 
+## General Guidance
+
+- Spawn multiple sub-agents whenever beneficial to speed and context
+- Follow the Explore -> Plan -> Code -> Commit cycle
+- Follow a Test Driven Development Cycle
+  - Write tests based on expected inputs and outputs
+  - Run the tests and confirm they fail
+  - Write code that passes the test.  Do not modify the tests.  Keep giong until all test pass.  Verify with indepenent sub-agents. 
+- If executing a plan originating from <plan>.md file in `llm_context\plan\` file, update the plan file after each step with current status so it can be resumed in a new context at any time.
+
 ## Core Principles
 
 - Write clean, concise, functional code using small, focused functions.

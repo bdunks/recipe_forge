@@ -15,7 +15,7 @@
     "config",
     "deps",
     "priv",
-    "test",
+    "llm_context",
     "erl_crash.dump",
     "*.ez",
     ".fetch",
@@ -28,6 +28,8 @@
   "max_file_size_mb": 2.0,
   "include_hidden": false,
   "max_depth": null,
+  "context": "You are an expert Elixir and Phoenix developer with deep knowledge of OTP principles, Ecto, and secure web application development. Your task is to conduct a comprehensive code review of the following Phoenix application source code. Pay close attention to performance bottlenecks, security vulnerabilities, adherence to Phoenix conventions (like contexts), and idiomatic Elixir code.",
+  "request": "Based on the Phoenix code provided above, perform the following actions:\n\n1. Check for deviations from Phoenix best practices. Specifically, verify that database logic is correctly isolated within context modules and not leaking into controllers or views.\n2. List any code that is not idiomatic Elixir or could be refactored for better pattern matching, clarity, and maintainability.\n3. Identify all potential N+1 query problems in Ecto schemas, controllers, and LiveView assigns. Suggest specific `Ecto.preload` strategies to resolve them.\n4. Review for common security issues such as Cross-Site Scripting (XSS) in HEEx/EEx templates, missing authorization checks in plugs or controller actions, and insecure direct object references.\n5. Present your findings in a markdown file format that can be consumed efficiently by an AI Agent. It should include all the data necessary for the AI Agent to work autonomously to update the code.",
   "verbose": false,
   "log_level": "INFO"
 }

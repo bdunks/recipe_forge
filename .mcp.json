@@ -5,6 +5,15 @@
       "args": [
         "http://localhost:4000/tidewave/mcp"
       ]
+    },
+    "playwright": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "@playwright/mcp@latest"
+      ]
     }
+  
   }
 }

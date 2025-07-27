@@ -14,11 +14,20 @@
       "Bash(mix help:*)",
       "Bash(ls:*)",
       "Bash(find:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "mcp__tidewave__get_source_location",
+      "Bash(rm:*)",
+      "Bash(mix ecto.gen.migration:*)",
+      "Bash(mix ecto.migrate:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_click",
+      "Bash(mix compile:*)",
+      "Bash(elixir:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "tidewave"
+    "tidewave",
+    "playwright"
   ]
 }
