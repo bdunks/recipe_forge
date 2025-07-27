@@ -6,9 +6,11 @@
     id="favorites-grid"
     phx-update="stream"
   >
-    <div :for={{id, recipe} <- @streams.recipes} id={id}>
-      <RecipeForgeWeb.RecipeCard.recipe_card recipe={recipe} />
-    </div>
+    <RecipeForgeWeb.RecipeCard.recipe_card
+      :for={{dom_id, recipe} <- @streams.recipes}
+      dom_id={dom_id}
+      recipe={recipe}
+    />
   </div>
 <% else %>
   <!-- Empty State -->

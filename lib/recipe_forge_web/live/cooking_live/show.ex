@@ -57,7 +57,6 @@ defmodule RecipeForgeWeb.CookingLive.Show do
     {:noreply, assign(socket, :current_step, valid_step)}
   end
 
-
   defp current_instruction(recipe, step) do
     Enum.at(recipe.instructions, step - 1, "")
   end

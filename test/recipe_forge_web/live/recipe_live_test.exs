@@ -79,7 +79,7 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
       {:ok, index_live, _html} = live(conn, ~p"/recipes")
 
       # Click on recipe card to navigate to detail page
-      assert index_live |> element("#recipes-#{recipe.id} a") |> render_click()
+      assert index_live |> element(~s|div[id^="recipes-"] a|) |> render_click()
       assert_redirect(index_live, ~p"/recipes/#{recipe}")
 
       # Navigate to detail page and test edit from there
@@ -105,8 +105,18 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
       assert html =~ "Updated Test Recipe"
     end
 
-    # Recipe cards don't have delete functionality - delete should be tested
-    # from the recipe detail page instead if delete functionality exists
+    test "deletes recipe from index page", %{conn: conn, recipe: recipe} do
+      {:ok, index_live, _html} = live(conn, ~p"/recipes")
+
+      dom_id = "recipes-#{recipe.id}"
+      assert has_element?(index_live, "##{dom_id}")
+
+      index_live
+      |> element("##{dom_id} button[title='Delete recipe']")
+      |> render_click()
+
+      refute has_element?(index_live, "##{dom_id}")
+    end
   end
 
   describe "Show" do
@@ -139,6 +149,16 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
       html = render(show_live)
       assert html =~ "Recipe updated successfully"
       assert html =~ "Updated Test Recipe"
+    end
+
+    test "deletes recipe from show page", %{conn: conn, recipe: recipe} do
+      {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
+
+      show_live
+      |> element("button", "Delete Recipe")
+      |> render_click()
+
+      assert_redirected(show_live, ~p"/recipes")
     end
   end
 

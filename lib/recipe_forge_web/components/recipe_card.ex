@@ -8,10 +8,14 @@ defmodule RecipeForgeWeb.RecipeCard do
   Renders a recipe card with interactive favorite toggle.
   """
   attr :recipe, :map, required: true
+  attr :dom_id, :string, required: true
 
   def recipe_card(assigns) do
     ~H"""
-    <div class="card card-compact bg-base-100 shadow-xl hover:shadow-2xl transition-shadow relative">
+    <div
+      id={@dom_id}
+      class="card card-compact bg-base-100 shadow-xl hover:shadow-2xl transition-shadow relative"
+    >
       <.link navigate={~p"/recipes/#{@recipe.id}"} class="block">
         <figure>
           <%= if Map.get(@recipe, :image_url) do %>
@@ -23,23 +27,37 @@ defmodule RecipeForgeWeb.RecipeCard do
           <% end %>
         </figure>
         <div class="card-body">
-          <h2 class="card-title text-lg font-semibold"><%= @recipe.name %></h2>
+          <h2 class="card-title text-lg font-semibold">{@recipe.name}</h2>
           <div class="card-actions justify-between items-center">
             <div class="flex flex-wrap gap-1">
               <%= for category <- @recipe.categories do %>
-                <div class="badge badge-outline text-xs"><%= category.name %></div>
+                <div class="badge badge-outline text-xs">{category.name}</div>
               <% end %>
             </div>
           </div>
         </div>
       </.link>
       
-      <!-- Interactive favorite toggle button -->
-      <button 
-        phx-click="toggle_favorite" 
+    <!-- Delete button -->
+      <button
+        phx-click={JS.push("delete", value: %{id: @recipe.id}) |> JS.hide(to: "##{@dom_id}")}
+        data-confirm="Are you sure you want to delete this recipe?"
+        class="absolute top-2 left-2 btn btn-circle btn-ghost btn-sm bg-white/80 hover:bg-white/90 text-red-500 hover:text-red-700"
+        title="Delete recipe"
+      >
+        <.icon name="hero-trash" class="h-5 w-5" />
+      </button>
+      
+    <!-- Interactive favorite toggle button -->
+      <button
+        phx-click="toggle_favorite"
         phx-value-id={@recipe.id}
         class="absolute top-2 right-2 btn btn-circle btn-ghost btn-sm bg-white/80 hover:bg-white/90"
-        title={if Map.get(@recipe, :is_favorite, false), do: "Remove from favorites", else: "Add to favorites"}
+        title={
+          if Map.get(@recipe, :is_favorite, false),
+            do: "Remove from favorites",
+            else: "Add to favorites"
+        }
       >
         <%= if Map.get(@recipe, :is_favorite, false) do %>
           <.icon name="hero-heart-solid" class="h-5 w-5 text-red-500" />

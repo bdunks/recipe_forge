@@ -76,5 +76,4 @@ defmodule RecipeForgeWeb.BrowseLive.Index do
   def handle_event("toggle_favorite", %{"id" => id}, socket) do
     RecipeForgeWeb.SharedHandlers.toggle_favorite(socket, id)
   end
-
 end

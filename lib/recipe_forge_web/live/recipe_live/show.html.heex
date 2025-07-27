@@ -80,7 +80,14 @@
       </div>
     </div>
 
-    <div class="card-actions justify-end mt-6">
+    <div class="card-actions justify-end mt-6 space-x-2">
+      <button
+        class="btn btn-error btn-outline"
+        phx-click="delete"
+        data-confirm="Are you sure you want to permanently delete this recipe?"
+      >
+        <.icon name="hero-trash" class="w-4 h-4" /> Delete Recipe
+      </button>
       <.link navigate={~p"/recipes/#{@recipe}/cooking"} class="btn btn-secondary">
         Cooking Mode
       </.link>

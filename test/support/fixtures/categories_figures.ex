@@ -14,7 +14,7 @@ defmodule RecipeForge.CategoriesFixtures do
   """
   def category_fixture(attrs \\ %{}) do
     # Normalize string keys to atom keys to avoid mixed key maps
-    normalized_attrs = 
+    normalized_attrs =
       for {key, val} <- attrs, into: %{} do
         atom_key = if is_binary(key), do: String.to_atom(key), else: key
         {atom_key, val}

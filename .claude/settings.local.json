@@ -22,7 +22,8 @@
       "mcp__playwright__browser_navigate",
       "mcp__playwright__browser_click",
       "Bash(mix compile:*)",
-      "Bash(elixir:*)"
+      "Bash(elixir:*)",
+      "Bash(mix format)"
     ]
   },
   "enableAllProjectMcpServers": true,

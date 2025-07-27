@@ -39,6 +39,24 @@ defmodule RecipeForgeWeb.RecipeLive.Show do
     end
   end
 
+  @impl true
+  def handle_event("delete", _params, socket) do
+    recipe = socket.assigns.recipe
+
+    case Recipes.delete_recipe(recipe) do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Recipe deleted successfully")
+         |> push_navigate(to: ~p"/recipes")}
+
+      {:error, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Error deleting recipe")}
+    end
+  end
+
   defp page_title(:show), do: "Show Recipe"
   defp page_title(:edit), do: "Edit Recipe"
 end

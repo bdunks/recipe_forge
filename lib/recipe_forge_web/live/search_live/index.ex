@@ -47,6 +47,7 @@ defmodule RecipeForgeWeb.SearchLive.Index do
 
   defp perform_search(socket, query) when is_binary(query) do
     recipes = search_recipes(query)
+
     socket
     |> stream(:recipes, recipes)
     |> assign(:recipe_count, length(recipes))

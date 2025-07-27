@@ -15,11 +15,11 @@ defmodule RecipeForgeWeb.RecipeCardTest do
         is_favorite: false
       }
 
-      assigns = %{recipe: recipe}
+      assigns = %{recipe: recipe, dom_id: "recipes-#{recipe.id}"}
 
       html =
         rendered_to_string(~H"""
-        <.recipe_card recipe={@recipe} />
+        <.recipe_card recipe={@recipe} dom_id={@dom_id} />
         """)
 
       assert html =~ "Test Recipe"
@@ -37,11 +37,11 @@ defmodule RecipeForgeWeb.RecipeCardTest do
         is_favorite: false
       }
 
-      assigns = %{recipe: recipe}
+      assigns = %{recipe: recipe, dom_id: "recipes-#{recipe.id}"}
 
       html =
         rendered_to_string(~H"""
-        <.recipe_card recipe={@recipe} />
+        <.recipe_card recipe={@recipe} dom_id={@dom_id} />
         """)
 
       assert html =~ "hero-camera"
@@ -57,11 +57,11 @@ defmodule RecipeForgeWeb.RecipeCardTest do
         is_favorite: false
       }
 
-      assigns = %{recipe: recipe}
+      assigns = %{recipe: recipe, dom_id: "recipes-#{recipe.id}"}
 
       html =
         rendered_to_string(~H"""
-        <.recipe_card recipe={@recipe} />
+        <.recipe_card recipe={@recipe} dom_id={@dom_id} />
         """)
 
       assert html =~ ~s(<img src="https://example.com/image.jpg" alt="Test Recipe")
@@ -77,11 +77,11 @@ defmodule RecipeForgeWeb.RecipeCardTest do
         is_favorite: false
       }
 
-      assigns = %{recipe: recipe}
+      assigns = %{recipe: recipe, dom_id: "recipes-#{recipe.id}"}
 
       html =
         rendered_to_string(~H"""
-        <.recipe_card recipe={@recipe} />
+        <.recipe_card recipe={@recipe} dom_id={@dom_id} />
         """)
 
       assert html =~ "title=\"Add to favorites\""
@@ -99,16 +99,37 @@ defmodule RecipeForgeWeb.RecipeCardTest do
         is_favorite: true
       }
 
-      assigns = %{recipe: recipe}
+      assigns = %{recipe: recipe, dom_id: "recipes-#{recipe.id}"}
 
       html =
         rendered_to_string(~H"""
-        <.recipe_card recipe={@recipe} />
+        <.recipe_card recipe={@recipe} dom_id={@dom_id} />
         """)
 
       assert html =~ "title=\"Remove from favorites\""
       assert html =~ "phx-click=\"toggle_favorite\""
       assert html =~ "hero-heart-solid"
+    end
+
+    test "renders delete button" do
+      recipe = %{
+        id: "a1a1a1a1-b2b2-c3c3-d4d4-e5e5e5e5e5e5",
+        name: "Test Recipe",
+        image_url: nil,
+        categories: [],
+        is_favorite: false
+      }
+
+      assigns = %{recipe: recipe, dom_id: "recipes-#{recipe.id}"}
+
+      html =
+        rendered_to_string(~H"""
+        <.recipe_card recipe={@recipe} dom_id={@dom_id} />
+        """)
+
+      assert html =~ "title=\"Delete recipe\""
+      assert html =~ "hero-trash"
+      assert html =~ "data-confirm=\"Are you sure you want to delete this recipe?\""
     end
   end
 end

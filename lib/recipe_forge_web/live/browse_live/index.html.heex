@@ -74,11 +74,11 @@
       phx-update="stream"
       class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
     >
-      <%= for {dom_id, recipe} <- @streams.recipes do %>
-        <div id={dom_id}>
-          <RecipeForgeWeb.RecipeCard.recipe_card recipe={recipe} />
-        </div>
-      <% end %>
+      <RecipeForgeWeb.RecipeCard.recipe_card
+        :for={{dom_id, recipe} <- @streams.recipes}
+        dom_id={dom_id}
+        recipe={recipe}
+      />
     </div>
     
 <!-- Empty State -->
