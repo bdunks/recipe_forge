@@ -8,27 +8,28 @@ defmodule RecipeForge.RecipesAIIntegrationTest do
 
   describe "create_recipe_from_ai/1" do
     test "creates recipe from AI data with ingredients" do
-      ai_data = ai_recipe_data(%{
-        name: "AI Generated Recipe",
-        description: "A recipe created by AI",
-        instructions: ["Step 1", "Step 2", "Step 3"],
-        prep_time: "15 min",
-        cook_time: "30 min",
-        servings: 4,
-        yield_description: "4 servings",
-        image_url: "https://example.com/image.jpg",
-        notes: "AI generated notes",
-        nutrition: %{calories: 250, protein: 15},
-        category_name: "AI_Recipes",
-        ingredients: [
-          %{name: "flour", quantity: "2", unit: "cups", notes: "all-purpose"},
-          %{name: "eggs", quantity: "3", unit: "whole", notes: "large"},
-          %{name: "milk", quantity: "1", unit: "cup", notes: "whole milk"}
-        ]
-      })
+      ai_data =
+        ai_recipe_data(%{
+          name: "AI Generated Recipe",
+          description: "A recipe created by AI",
+          instructions: ["Step 1", "Step 2", "Step 3"],
+          prep_time: "15 min",
+          cook_time: "30 min",
+          servings: 4,
+          yield_description: "4 servings",
+          image_url: "https://example.com/image.jpg",
+          notes: "AI generated notes",
+          nutrition: %{calories: 250, protein: 15},
+          category_name: "AI_Recipes",
+          ingredients: [
+            %{name: "flour", quantity: "2", unit: "cups", notes: "all-purpose"},
+            %{name: "eggs", quantity: "3", unit: "whole", notes: "large"},
+            %{name: "milk", quantity: "1", unit: "cup", notes: "whole milk"}
+          ]
+        })
 
       assert {:ok, %Recipe{} = recipe} = Recipes.create_recipe_from_ai(ai_data)
-      
+
       # Verify basic recipe fields
       assert recipe.name == "AI Generated Recipe"
       assert recipe.description == "A recipe created by AI"
@@ -40,34 +41,35 @@ defmodule RecipeForge.RecipesAIIntegrationTest do
       assert recipe.image_url == "https://example.com/image.jpg"
       assert recipe.notes == "AI generated notes"
       assert recipe.nutrition == %{calories: 250, protein: 15}
-      
+
       # Verify ingredients were created
       assert length(recipe.recipe_ingredients) == 3
-      
+
       # Verify ingredients have correct display order
       ingredients = Enum.sort_by(recipe.recipe_ingredients, & &1.display_order)
-      
+
       [flour_ri, eggs_ri, milk_ri] = ingredients
-      
+
       assert flour_ri.quantity == Decimal.new("2")
       assert flour_ri.unit == "cups"
       assert flour_ri.notes == "all-purpose"
       assert flour_ri.display_order == 0
-      
+
       assert eggs_ri.quantity == Decimal.new("3")
       assert eggs_ri.unit == "whole"
       assert eggs_ri.notes == "large"
       assert eggs_ri.display_order == 1
-      
+
       assert milk_ri.quantity == Decimal.new("1")
       assert milk_ri.unit == "cup"
       assert milk_ri.notes == "whole milk"
       assert milk_ri.display_order == 2
-      
+
       # Verify category was created
       assert length(recipe.categories) == 1
       category = hd(recipe.categories)
-      assert category.name == "ai_recipes"  # normalized to lowercase
+      # normalized to lowercase
+      assert category.name == "ai_recipes"
     end
 
     test "creates recipe from AI data with minimal fields" do
@@ -80,13 +82,13 @@ defmodule RecipeForge.RecipesAIIntegrationTest do
       }
 
       assert {:ok, %Recipe{} = recipe} = Recipes.create_recipe_from_ai(ai_data)
-      
+
       assert recipe.name == "Simple AI Recipe"
       assert recipe.description == "Simple description"
       assert recipe.instructions == ["Do something"]
       assert recipe.servings == 2
       assert recipe.yield_description == "2 servings"
-      
+
       # Verify defaults
       assert recipe.prep_time == nil
       assert recipe.cook_time == nil
@@ -94,7 +96,7 @@ defmodule RecipeForge.RecipesAIIntegrationTest do
       assert recipe.notes == nil
       assert recipe.nutrition == nil
       assert recipe.recipe_ingredients == []
-      
+
       # Verify default category
       assert length(recipe.categories) == 1
       category = hd(recipe.categories)
@@ -189,15 +191,16 @@ defmodule RecipeForge.RecipesAIIntegrationTest do
       }
 
       assert {:ok, %Recipe{} = recipe} = Recipes.create_recipe_from_ai(ai_data)
+
       assert recipe.nutrition == %{
-        calories: 350,
-        protein: 25,
-        carbs: 45,
-        fat: 12,
-        fiber: 8,
-        sugar: 5,
-        sodium: 450
-      }
+               calories: 350,
+               protein: 25,
+               carbs: 45,
+               fat: 12,
+               fiber: 8,
+               sugar: 5,
+               sodium: 450
+             }
     end
 
     test "validates required fields from AI data" do
@@ -207,11 +210,14 @@ defmodule RecipeForge.RecipesAIIntegrationTest do
         # Missing description, instructions, servings, yield_description
       }
 
-      assert {:error, %Ecto.Changeset{} = changeset} = Recipes.create_recipe_from_ai(invalid_ai_data)
+      assert {:error, %Ecto.Changeset{} = changeset} =
+               Recipes.create_recipe_from_ai(invalid_ai_data)
+
       assert changeset.valid? == false
-      
+
       # Check that required field errors are present
       required_fields = [:description, :instructions, :servings, :yield_description]
+
       Enum.each(required_fields, fn field ->
         assert Keyword.has_key?(changeset.errors, field)
       end)

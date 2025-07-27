@@ -6,7 +6,14 @@ defmodule RecipeForgeWeb.RecipeLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :recipes, Recipes.list_recipes())}
+    url_form = to_form(%{"url" => ""}, as: :url)
+
+    socket =
+      socket
+      |> assign(:url_form, url_form)
+      |> stream(:recipes, Recipes.list_recipes())
+
+    {:ok, socket}
   end
 
   @impl true
@@ -28,7 +35,7 @@ defmodule RecipeForgeWeb.RecipeLive.Index do
 
   defp apply_action(socket, :index, _params) do
     socket
-    |> assign(:page_title, "Listing Recipes")
+    |> assign(:page_title, "RecipeForge")
     |> assign(:recipe, nil)
   end
 
@@ -38,10 +45,20 @@ defmodule RecipeForgeWeb.RecipeLive.Index do
   end
 
   @impl true
+  def handle_event("generate_from_url", %{"url" => %{"url" => url}}, socket) do
+    # For now, redirect to AI generation page with the URL
+    {:noreply, push_navigate(socket, to: ~p"/ai_generate?url=#{URI.encode(url)}")}
+  end
+
+  @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     recipe = Recipes.get_recipe!(id)
     {:ok, _} = Recipes.delete_recipe(recipe)
 
     {:noreply, stream_delete(socket, :recipes, recipe)}
+  end
+
+  def handle_event("toggle_favorite", %{"id" => id}, socket) do
+    RecipeForgeWeb.SharedHandlers.toggle_favorite(socket, id)
   end
 end

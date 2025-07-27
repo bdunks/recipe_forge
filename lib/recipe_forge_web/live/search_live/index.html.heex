@@ -1,0 +1,115 @@
+<div class="max-w-4xl mx-auto">
+  <!-- Search Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold mb-4">Search Recipes</h1>
+    
+<!-- Search Form -->
+    <.form for={@search_form} id="search-form" phx-submit="search" class="max-w-2xl">
+      <div class="join w-full">
+        <.input
+          field={@search_form[:q]}
+          placeholder="Search recipes, ingredients, categories..."
+          class="input input-bordered join-item flex-1"
+          phx-debounce="300"
+        />
+        <button type="submit" class="btn btn-primary join-item">
+          <.icon name="hero-magnifying-glass" class="h-5 w-5" />
+        </button>
+      </div>
+    </.form>
+  </div>
+  
+<!-- Search Results -->
+  <%= if @query != "" do %>
+    <div class="mb-6">
+      <h2 class="text-xl font-semibold">
+        Search results for "<span class="text-primary">{@query}</span>"
+      </h2>
+      <p class="text-gray-600 mt-1">
+        <%= case @recipe_count do %>
+          <% 0 -> %>
+            No recipes found
+          <% 1 -> %>
+            Found 1 recipe
+          <% count -> %>
+            Found #{count} recipes
+        <% end %>
+      </p>
+    </div>
+    
+<!-- Results Grid -->
+    <%= if @recipe_count > 0 do %>
+      <div
+        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+        id="search-results"
+        phx-update="stream"
+      >
+        <div :for={{id, recipe} <- @streams.recipes} id={id}>
+          <RecipeForgeWeb.RecipeCard.recipe_card recipe={recipe} />
+        </div>
+      </div>
+    <% else %>
+      <div class="text-center py-12 bg-base-100 rounded-lg">
+        <div class="text-gray-500 text-lg mb-4">
+          <.icon name="hero-magnifying-glass" class="h-12 w-12 mx-auto mb-4 text-gray-300" />
+          No recipes found matching "{@query}"
+        </div>
+        <div class="text-gray-400 mb-6">
+          Try searching for:
+          <ul class="mt-2 space-y-1">
+            <li>• Recipe names (e.g., "pasta", "chicken")</li>
+            <li>• Ingredients (e.g., "tomato", "garlic")</li>
+            <li>• Categories (e.g., "breakfast", "dessert")</li>
+          </ul>
+        </div>
+        <.link navigate={~p"/recipes/new"} class="btn btn-primary">
+          Create a New Recipe
+        </.link>
+      </div>
+    <% end %>
+  <% else %>
+    <!-- Search Tips -->
+    <div class="bg-base-100 rounded-lg p-8 text-center">
+      <.icon name="hero-magnifying-glass" class="h-16 w-16 mx-auto mb-4 text-gray-300" />
+      <h3 class="text-xl font-semibold mb-4">Find Your Perfect Recipe</h3>
+      <div class="text-gray-600 max-w-md mx-auto">
+        <p class="mb-4">
+          Search through your recipe collection by name, ingredients, or categories.
+        </p>
+        <div class="text-sm">
+          <p class="font-medium mb-2">Try searching for:</p>
+          <div class="flex flex-wrap gap-2 justify-center">
+            <span
+              class="badge badge-outline cursor-pointer"
+              phx-click="search"
+              phx-value-search[q]="chicken"
+            >
+              chicken
+            </span>
+            <span
+              class="badge badge-outline cursor-pointer"
+              phx-click="search"
+              phx-value-search[q]="pasta"
+            >
+              pasta
+            </span>
+            <span
+              class="badge badge-outline cursor-pointer"
+              phx-click="search"
+              phx-value-search[q]="dessert"
+            >
+              dessert
+            </span>
+            <span
+              class="badge badge-outline cursor-pointer"
+              phx-click="search"
+              phx-value-search[q]="vegetarian"
+            >
+              vegetarian
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

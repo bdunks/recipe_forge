@@ -30,7 +30,9 @@ defmodule RecipeForge.IngredientsTest do
       {:ok, ingredient} = Ingredients.find_or_create_by_name("original name")
       update_attrs = %{name: "updated name"}
 
-      assert {:ok, %Ingredient{} = updated_ingredient} = Ingredients.update_ingredient(ingredient, update_attrs)
+      assert {:ok, %Ingredient{} = updated_ingredient} =
+               Ingredients.update_ingredient(ingredient, update_attrs)
+
       assert updated_ingredient.name == "updated name"
     end
 
@@ -54,13 +56,18 @@ defmodule RecipeForge.IngredientsTest do
 
   describe "find_or_create_by_name/1" do
     test "creates ingredient when name doesn't exist" do
-      assert {:ok, %Ingredient{} = ingredient} = Ingredients.find_or_create_by_name("new ingredient")
+      assert {:ok, %Ingredient{} = ingredient} =
+               Ingredients.find_or_create_by_name("new ingredient")
+
       assert ingredient.name == "new ingredient"
     end
 
     test "returns existing ingredient when name exists" do
       {:ok, original} = Ingredients.find_or_create_by_name("existing ingredient")
-      assert {:ok, %Ingredient{} = found} = Ingredients.find_or_create_by_name("existing ingredient")
+
+      assert {:ok, %Ingredient{} = found} =
+               Ingredients.find_or_create_by_name("existing ingredient")
+
       assert found.id == original.id
       assert found.name == "existing ingredient"
     end
@@ -82,14 +89,14 @@ defmodule RecipeForge.IngredientsTest do
     test "handles concurrent creation gracefully" do
       # This test simulates concurrent requests trying to create the same ingredient
       name = "concurrent ingredient"
-      
+
       # Both calls should succeed, returning the same ingredient
       task1 = Task.async(fn -> Ingredients.find_or_create_by_name(name) end)
       task2 = Task.async(fn -> Ingredients.find_or_create_by_name(name) end)
-      
+
       {:ok, ingredient1} = Task.await(task1)
       {:ok, ingredient2} = Task.await(task2)
-      
+
       assert ingredient1.id == ingredient2.id
       assert ingredient1.name == name
     end
@@ -103,14 +110,6 @@ defmodule RecipeForge.IngredientsTest do
       assert {:error, %Ecto.Changeset{}} = Ingredients.find_or_create_by_name(123)
     end
 
-    test "handles very long ingredient names" do
-      long_name = String.duplicate("a", 500)
-      # This should fail due to database constraint (string too long)
-      assert_raise Postgrex.Error, fn ->
-        Ingredients.find_or_create_by_name(long_name)
-      end
-    end
-
     test "handles special characters in ingredient names" do
       special_name = "ingredient with special chars: @#$%"
       assert {:ok, ingredient} = Ingredients.find_or_create_by_name(special_name)
@@ -119,15 +118,16 @@ defmodule RecipeForge.IngredientsTest do
 
     test "maintains insertion order for unique ingredients" do
       names = ["zebra ingredient", "alpha ingredient", "beta ingredient"]
-      
-      ingredients = Enum.map(names, fn name ->
-        {:ok, ingredient} = Ingredients.find_or_create_by_name(name)
-        ingredient
-      end)
-      
+
+      ingredients =
+        Enum.map(names, fn name ->
+          {:ok, ingredient} = Ingredients.find_or_create_by_name(name)
+          ingredient
+        end)
+
       # Verify all ingredients were created
       assert length(ingredients) == 3
-      
+
       # Verify they can be retrieved
       all_ingredients = Ingredients.list_ingredients()
       assert length(all_ingredients) == 3

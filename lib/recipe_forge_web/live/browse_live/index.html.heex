@@ -1,0 +1,107 @@
+<.header>
+  Browse Recipes by Category
+  <:subtitle>
+    Discover recipes organized by categories
+  </:subtitle>
+</.header>
+
+<div class="flex flex-col lg:flex-row gap-6 mt-6">
+  <!-- Left Sidebar - Categories -->
+  <div class="lg:w-1/4 w-full">
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title text-lg mb-4">Categories</h2>
+
+        <ul class="menu menu-compact w-full">
+          <!-- All Recipes Option -->
+          <li class={if @selected_category_id == nil, do: "bordered", else: ""}>
+            <a
+              phx-click="filter_by_category"
+              phx-value-category_id=""
+              class={[
+                "flex justify-between items-center",
+                if(@selected_category_id == nil, do: "active", else: "")
+              ]}
+            >
+              <span>All Recipes</span>
+              <span class="badge badge-outline">
+                {@total_recipes}
+              </span>
+            </a>
+          </li>
+          
+<!-- Individual Categories -->
+          <%= for category <- @categories do %>
+            <li class={if @selected_category_id == category.id, do: "bordered", else: ""}>
+              <a
+                phx-click="filter_by_category"
+                phx-value-category_id={category.id}
+                class={[
+                  "flex justify-between items-center",
+                  if(@selected_category_id == category.id, do: "active", else: "")
+                ]}
+              >
+                <span>{category.name}</span>
+                <span class="badge badge-outline">
+                  {category.recipe_count}
+                </span>
+              </a>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  </div>
+  
+<!-- Right Content - Recipe Grid -->
+  <div class="lg:w-3/4 w-full">
+    <div class="mb-4">
+      <h3 class="text-xl font-semibold">
+        {@selected_category_name} Recipes
+      </h3>
+      <p class="text-base-content/70 text-sm">
+        <%= case @selected_category_id do %>
+          <% nil -> %>
+            Showing all recipes
+          <% _ -> %>
+            Showing recipes in {@selected_category_name} category
+        <% end %>
+      </p>
+    </div>
+
+    <div
+      id="recipes-grid"
+      phx-update="stream"
+      class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+    >
+      <%= for {dom_id, recipe} <- @streams.recipes do %>
+        <div id={dom_id}>
+          <RecipeForgeWeb.RecipeCard.recipe_card recipe={recipe} />
+        </div>
+      <% end %>
+    </div>
+    
+<!-- Empty State -->
+    <%= if @empty_recipes do %>
+      <div class="text-center py-12">
+        <div class="mx-auto w-24 h-24 bg-base-200 rounded-full flex items-center justify-center mb-4">
+          <.icon name="hero-magnifying-glass" class="w-8 h-8 text-base-content/50" />
+        </div>
+        <h3 class="text-lg font-medium text-base-content/70 mb-2">
+          No recipes found
+        </h3>
+        <p class="text-base-content/50 mb-4">
+          <%= case @selected_category_id do %>
+            <% nil -> %>
+              You haven't created any recipes yet.
+            <% _ -> %>
+              No recipes found in the {@selected_category_name} category.
+          <% end %>
+        </p>
+        <.link navigate={~p"/recipes/new"} class="btn btn-primary">
+          Create Your First Recipe
+        </.link>
+      </div>
+    <% end %>
+  </div>
+</div>

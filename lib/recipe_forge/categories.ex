@@ -7,13 +7,30 @@ defmodule RecipeForge.Categories do
   alias RecipeForge.Repo
 
   alias RecipeForge.Categories.Category
-  alias RecipeForge.Shared.NameBasedEntityManager
 
   @doc """
   Returns the list of categories.
   """
   def list_categories do
     Repo.all(Category)
+  end
+
+  @doc """
+  Returns the list of categories with recipe counts.
+  """
+  def list_categories_with_recipe_count do
+    from(c in Category,
+      left_join: rc in "recipe_categories",
+      on: rc.category_id == c.id,
+      group_by: c.id,
+      select: %{
+        id: c.id,
+        name: c.name,
+        recipe_count: count(rc.recipe_id)
+      },
+      order_by: c.name
+    )
+    |> Repo.all()
   end
 
   @doc """
@@ -56,21 +73,40 @@ defmodule RecipeForge.Categories do
   end
 
   def find_or_create_from_names(names) when is_list(names) do
-    sanitized_names = NameBasedEntityManager.sanitize_names(names)
+    sanitized_names = sanitize_names(names)
 
-    # First, insert all the new categories that might not exist.
-    # `on_conflict: :nothing` is very efficient. It will not return the IDs
-    # of the inserted rows, so a second query is needed.
-    new_category_maps =
-      Enum.map(sanitized_names, fn name ->
-        %{name: name, inserted_at: DateTime.utc_now(), updated_at: DateTime.utc_now()}
-      end)
+    if Enum.empty?(sanitized_names) do
+      {:ok, []}
+    else
+      now = DateTime.utc_now()
 
-    Repo.insert_all(Category, new_category_maps, on_conflict: :nothing, conflict_target: :name)
-    # Now, fetch all the required categories (both existing and newly created).
-    categories = Repo.all(from c in Category, where: c.name in ^sanitized_names)
-    {:ok, categories}
+      new_maps =
+        Enum.map(sanitized_names, fn name ->
+          %{name: name, inserted_at: now, updated_at: now}
+        end)
+
+      # Atomically insert any new records without raising an error for existing ones.
+      Repo.insert_all(Category, new_maps, on_conflict: :nothing, conflict_target: :name)
+
+      # Now, fetch all the required records (both existing and newly created) in a single query.
+      records = from(c in Category, where: c.name in ^sanitized_names) |> Repo.all()
+      {:ok, records}
+    end
   end
+
+  defp sanitize_names(names) when is_list(names) do
+    names
+    |> Enum.map(&String.trim/1)
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.map(&String.downcase/1)
+    |> Enum.uniq()
+  end
+
+  defp sanitize_names(names) when is_binary(names) do
+    names |> String.split(" ", trim: true) |> sanitize_names()
+  end
+
+  defp sanitize_names(_), do: []
 
   @doc """
   Updates a category.

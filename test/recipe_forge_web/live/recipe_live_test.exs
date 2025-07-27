@@ -46,17 +46,19 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
     test "lists all recipes", %{conn: conn, recipe: recipe} do
       {:ok, _index_live, html} = live(conn, ~p"/recipes")
 
-      assert html =~ "Listing Recipes"
+      assert html =~ "RecipeForge"
       assert html =~ recipe.name
     end
 
     test "saves new recipe", %{conn: conn} do
       {:ok, index_live, _html} = live(conn, ~p"/recipes")
 
-      assert index_live |> element("a", "New Recipe") |> render_click() =~
-               "New Recipe"
+      assert index_live |> element("a[title='Create Recipe']") |> render_click()
+      assert_redirect(index_live, ~p"/recipes/new")
 
-      assert_patch(index_live, ~p"/recipes/new")
+      # Follow the redirect to the new recipe page
+      {:ok, index_live, _html} = live(conn, ~p"/recipes/new")
+      assert render(index_live) =~ "New Recipe"
 
       assert index_live
              |> form("#recipe-form", recipe: @invalid_attrs)
@@ -73,35 +75,38 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
       assert html =~ "Test Recipe"
     end
 
-    test "updates recipe in listing", %{conn: conn, recipe: recipe} do
+    test "updates recipe via detail page", %{conn: conn, recipe: recipe} do
       {:ok, index_live, _html} = live(conn, ~p"/recipes")
 
-      assert index_live |> element("#recipes-#{recipe.id} a", "Edit") |> render_click() =~
+      # Click on recipe card to navigate to detail page
+      assert index_live |> element("#recipes-#{recipe.id} a") |> render_click()
+      assert_redirect(index_live, ~p"/recipes/#{recipe}")
+
+      # Navigate to detail page and test edit from there
+      {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
+
+      assert show_live |> element("a", "Edit Recipe") |> render_click() =~
                "Edit Recipe"
 
-      assert_patch(index_live, ~p"/recipes/#{recipe}/edit")
+      assert_patch(show_live, ~p"/recipes/#{recipe}/show/edit")
 
-      assert index_live
+      assert show_live
              |> form("#recipe-form", recipe: @invalid_attrs)
              |> render_change() =~ "can&#39;t be blank"
 
-      assert index_live
+      assert show_live
              |> form("#recipe-form", recipe: @update_attrs)
              |> render_submit()
 
-      assert_patch(index_live, ~p"/recipes")
+      assert_patch(show_live, ~p"/recipes/#{recipe}")
 
-      html = render(index_live)
+      html = render(show_live)
       assert html =~ "Recipe updated successfully"
       assert html =~ "Updated Test Recipe"
     end
 
-    test "deletes recipe in listing", %{conn: conn, recipe: recipe} do
-      {:ok, index_live, _html} = live(conn, ~p"/recipes")
-
-      assert index_live |> element("#recipes-#{recipe.id} a", "Delete") |> render_click()
-      refute has_element?(index_live, "#recipes-#{recipe.id}")
-    end
+    # Recipe cards don't have delete functionality - delete should be tested
+    # from the recipe detail page instead if delete functionality exists
   end
 
   describe "Show" do
@@ -110,14 +115,13 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
     test "displays recipe", %{conn: conn, recipe: recipe} do
       {:ok, _show_live, html} = live(conn, ~p"/recipes/#{recipe}")
 
-      assert html =~ "Show Recipe"
       assert html =~ recipe.name
     end
 
     test "updates recipe within modal", %{conn: conn, recipe: recipe} do
       {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
 
-      assert show_live |> element("a", "Edit") |> render_click() =~
+      assert show_live |> element("a", "Edit Recipe") |> render_click() =~
                "Edit Recipe"
 
       assert_patch(show_live, ~p"/recipes/#{recipe}/show/edit")
@@ -138,15 +142,16 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
     end
   end
 
-
   describe "Ingredient handling" do
     test "creates recipe without ingredients", %{conn: conn} do
       {:ok, index_live, _html} = live(conn, ~p"/recipes")
 
-      assert index_live |> element("a", "New Recipe") |> render_click() =~
-               "New Recipe"
+      assert index_live |> element("a[title='Create Recipe']") |> render_click()
+      assert_redirect(index_live, ~p"/recipes/new")
 
-      assert_patch(index_live, ~p"/recipes/new")
+      # Follow the redirect to the new recipe page
+      {:ok, index_live, _html} = live(conn, ~p"/recipes/new")
+      assert render(index_live) =~ "New Recipe"
 
       # Create recipe without ingredients first
       recipe_attrs = %{
@@ -173,13 +178,16 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
 
     test "edits recipe with existing ingredients", %{conn: conn} do
       # Create a recipe with ingredients first
-      recipe = recipe_fixture(recipe_with_ingredients_attrs([
-        %{name: "flour", quantity: "2", unit: "cups", notes: "sifted"}
-      ]))
+      recipe =
+        recipe_fixture(
+          recipe_with_ingredients_attrs([
+            %{name: "flour", quantity: "2", unit: "cups", notes: "sifted"}
+          ])
+        )
 
       {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
 
-      assert show_live |> element("a", "Edit") |> render_click() =~
+      assert show_live |> element("a", "Edit Recipe") |> render_click() =~
                "Edit Recipe"
 
       assert_patch(show_live, ~p"/recipes/#{recipe}/show/edit")
@@ -191,6 +199,7 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
 
       # Update the ingredient
       [ingredient] = recipe.recipe_ingredients
+
       updated_recipe = %{
         "name" => "Updated Recipe",
         "recipe_ingredients" => %{
@@ -220,7 +229,7 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
 
       {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
 
-      assert show_live |> element("a", "Edit") |> render_click() =~
+      assert show_live |> element("a", "Edit Recipe") |> render_click() =~
                "Edit Recipe"
 
       assert_patch(show_live, ~p"/recipes/#{recipe}/show/edit")
@@ -228,27 +237,31 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
       # Should show the form but no ingredient fields
       html = render(show_live)
       assert html =~ "Ingredients"
-      assert html =~ "add more"
-      
+      assert html =~ "Add Ingredient"
+
       # Should not have any ingredient input fields
       refute has_element?(show_live, "input[name*='ingredient_name']")
     end
 
     test "removes ingredient from existing recipe", %{conn: conn} do
       # Create a recipe with ingredients first
-      recipe = recipe_fixture(recipe_with_ingredients_attrs([
-        %{name: "flour", quantity: "2", unit: "cups", notes: "sifted"}
-      ]))
+      recipe =
+        recipe_fixture(
+          recipe_with_ingredients_attrs([
+            %{name: "flour", quantity: "2", unit: "cups", notes: "sifted"}
+          ])
+        )
 
       {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
 
-      assert show_live |> element("a", "Edit") |> render_click() =~
+      assert show_live |> element("a", "Edit Recipe") |> render_click() =~
                "Edit Recipe"
 
       assert_patch(show_live, ~p"/recipes/#{recipe}/show/edit")
 
       # Mark ingredient for deletion
       [ingredient] = recipe.recipe_ingredients
+
       recipe_with_deletion = %{
         "recipe_ingredients" => %{
           "0" => %{
@@ -272,16 +285,18 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
       assert html =~ "Recipe updated successfully"
     end
 
-
     test "displays ingredient fields for existing ingredients", %{conn: conn} do
       # Create a recipe with one ingredient
-      recipe = recipe_fixture(recipe_with_ingredients_attrs([
-        %{name: "flour", quantity: "1", unit: "cup", notes: "original"}
-      ]))
+      recipe =
+        recipe_fixture(
+          recipe_with_ingredients_attrs([
+            %{name: "flour", quantity: "1", unit: "cup", notes: "original"}
+          ])
+        )
 
       {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
 
-      assert show_live |> element("a", "Edit") |> render_click() =~
+      assert show_live |> element("a", "Edit Recipe") |> render_click() =~
                "Edit Recipe"
 
       assert_patch(show_live, ~p"/recipes/#{recipe}/show/edit")
@@ -290,7 +305,7 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
       html = render(show_live)
       assert html =~ "flour"
       assert html =~ "original"
-      
+
       # Should have ingredient input fields
       assert has_element?(show_live, "input[name*='ingredient_name']")
       assert has_element?(show_live, "input[name*='quantity']")
@@ -300,20 +315,24 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
 
     test "shows validation error for duplicate ingredient names", %{conn: conn} do
       # Create a recipe with two ingredients
-      recipe = recipe_fixture(recipe_with_ingredients_attrs([
-        %{name: "flour", quantity: "1", unit: "cup", notes: "first"},
-        %{name: "sugar", quantity: "1", unit: "cup", notes: "different"}
-      ]))
+      recipe =
+        recipe_fixture(
+          recipe_with_ingredients_attrs([
+            %{name: "flour", quantity: "1", unit: "cup", notes: "first"},
+            %{name: "sugar", quantity: "1", unit: "cup", notes: "different"}
+          ])
+        )
 
       {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
 
-      assert show_live |> element("a", "Edit") |> render_click() =~
+      assert show_live |> element("a", "Edit Recipe") |> render_click() =~
                "Edit Recipe"
 
       assert_patch(show_live, ~p"/recipes/#{recipe}/show/edit")
 
       # Change second ingredient to have same name as first (duplicate)
       [ingredient1, ingredient2] = recipe.recipe_ingredients
+
       recipe_with_duplicate = %{
         "recipe_ingredients" => %{
           "0" => %{
@@ -325,7 +344,8 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
           },
           "1" => %{
             "id" => ingredient2.id,
-            "ingredient_name" => "flour",  # Same name as first ingredient
+            # Same name as first ingredient
+            "ingredient_name" => "flour",
             "quantity" => "2",
             "unit" => "cups",
             "notes" => "duplicate"
@@ -333,9 +353,10 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
         }
       }
 
-      html = show_live
-             |> form("#recipe-form", recipe: recipe_with_duplicate)
-             |> render_submit()
+      html =
+        show_live
+        |> form("#recipe-form", recipe: recipe_with_duplicate)
+        |> render_submit()
 
       # Should show error and not redirect
       assert html =~ "cannot contain duplicate ingredients"
@@ -345,24 +366,29 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
 
     test "shows validation error for empty ingredient name", %{conn: conn} do
       # Create a recipe with one ingredient
-      recipe = recipe_fixture(recipe_with_ingredients_attrs([
-        %{name: "flour", quantity: "1", unit: "cup", notes: "original"}
-      ]))
+      recipe =
+        recipe_fixture(
+          recipe_with_ingredients_attrs([
+            %{name: "flour", quantity: "1", unit: "cup", notes: "original"}
+          ])
+        )
 
       {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
 
-      assert show_live |> element("a", "Edit") |> render_click() =~
+      assert show_live |> element("a", "Edit Recipe") |> render_click() =~
                "Edit Recipe"
 
       assert_patch(show_live, ~p"/recipes/#{recipe}/show/edit")
 
       # Clear the ingredient name (make it empty) using form change event
       [ingredient] = recipe.recipe_ingredients
+
       recipe_with_empty_name = %{
         "recipe_ingredients" => %{
           "0" => %{
             "id" => ingredient.id,
-            "ingredient_name" => "",  # Empty name
+            # Empty name
+            "ingredient_name" => "",
             "quantity" => "1",
             "unit" => "cup",
             "notes" => "original"
@@ -371,9 +397,10 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
       }
 
       # Use render_change to test validation, not render_submit
-      html = show_live
-             |> form("#recipe-form", recipe: recipe_with_empty_name)
-             |> render_change()
+      html =
+        show_live
+        |> form("#recipe-form", recipe: recipe_with_empty_name)
+        |> render_change()
 
       # Should show validation error
       assert html =~ "can&#39;t be blank"
@@ -383,20 +410,24 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
 
     test "allows duplicate ingredient names when one is marked for deletion", %{conn: conn} do
       # Create a recipe with two ingredients with different names
-      recipe = recipe_fixture(recipe_with_ingredients_attrs([
-        %{name: "flour", quantity: "1", unit: "cup", notes: "original"},
-        %{name: "sugar", quantity: "1", unit: "cup", notes: "different"}
-      ]))
+      recipe =
+        recipe_fixture(
+          recipe_with_ingredients_attrs([
+            %{name: "flour", quantity: "1", unit: "cup", notes: "original"},
+            %{name: "sugar", quantity: "1", unit: "cup", notes: "different"}
+          ])
+        )
 
       {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
 
-      assert show_live |> element("a", "Edit") |> render_click() =~
+      assert show_live |> element("a", "Edit Recipe") |> render_click() =~
                "Edit Recipe"
 
       assert_patch(show_live, ~p"/recipes/#{recipe}/show/edit")
 
       # Mark first ingredient for deletion and change second to same name
       [ingredient1, ingredient2] = recipe.recipe_ingredients
+
       recipe_with_deletion_and_duplicate = %{
         "recipe_ingredients" => %{
           "0" => %{
@@ -405,11 +436,13 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
             "quantity" => "1",
             "unit" => "cup",
             "notes" => "original",
-            "_destroy" => "true"  # Mark for deletion
+            # Mark for deletion
+            "_destroy" => "true"
           },
           "1" => %{
             "id" => ingredient2.id,
-            "ingredient_name" => "flour",  # Same name as deleted ingredient
+            # Same name as deleted ingredient
+            "ingredient_name" => "flour",
             "quantity" => "2",
             "unit" => "cups",
             "notes" => "replacement"

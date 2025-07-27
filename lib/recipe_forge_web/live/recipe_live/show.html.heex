@@ -1,43 +1,95 @@
-<.header>
-  Recipe {@recipe.id}
-  <:subtitle>This is a recipe record from your database.</:subtitle>
-  <:actions>
-    <.link patch={~p"/recipes/#{@recipe}/show/edit"} phx-click={JS.push_focus()}>
-      <.button>Edit recipe</.button>
-    </.link>
-  </:actions>
-</.header>
+<div class="card bg-base-100 shadow-xl max-w-4xl mx-auto">
+  <div class="card-body">
+    <div class="flex justify-between items-start mb-4">
+      <div>
+        <h1 class="text-4xl font-bold">{@recipe.name}</h1>
+        <div class="flex flex-wrap gap-2 mt-2">
+          <%= for category <- @recipe.categories do %>
+            <div class="badge badge-outline">{category.name}</div>
+          <% end %>
+        </div>
+      </div>
+      <button
+        class="btn btn-ghost btn-circle text-red-500"
+        phx-click="toggle_favorite"
+        title={if @recipe.is_favorite, do: "Remove from Favorites", else: "Add to Favorites"}
+      >
+        <%= if @recipe.is_favorite do %>
+          <.icon name="hero-heart-solid" class="h-6 w-6" />
+        <% else %>
+          <.icon name="hero-heart" class="h-6 w-6" />
+        <% end %>
+      </button>
+    </div>
 
-<.list>
-  <:item title="Name">{@recipe.name}</:item>
-  <:item title="Description">{@recipe.description}</:item>
-  <:item title="Prep time">{@recipe.prep_time}</:item>
-  <:item title="Cook time">{@recipe.cook_time}</:item>
-  <:item title="Servings">{@recipe.servings}</:item>
-  <:item title="Yield description">{@recipe.yield_description}</:item>
-  <:item title="Image url">{@recipe.image_url}</:item>
-  <:item title="Notes">{@recipe.notes}</:item>
-  <:item title="Instructions">
-    <ol>
-      <li :for={instruction <- @recipe.instructions}>{instruction}</li>
-    </ol>
-  </:item>
-  <:item title="Categories">
-    <ul>
-      <li :for={category <- @recipe.categories}>{category.name}</li>
-    </ul>
-  </:item>
-  <:item title="Ingredients">
-    <ul>
-      <li :for={ri <- @recipe.recipe_ingredients}>
-        {ri.quantity} {ri.unit} - {ri.ingredient.name}
-        <span :if={ri.notes} class="text-gray-500">- {ri.notes}</span>
-      </li>
-    </ul>
-  </:item>
-</.list>
+    <%= if @recipe.description do %>
+      <p class="text-lg">{@recipe.description}</p>
+    <% end %>
 
-<.back navigate={~p"/recipes"}>Back to recipes</.back>
+    <div class="divider"></div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="md:col-span-1">
+        <h3 class="text-xl font-semibold mb-4">Ingredients</h3>
+        <ul class="list-disc list-inside space-y-1">
+          <%= for ri <- @recipe.recipe_ingredients do %>
+            <li>
+              {ri.quantity} {ri.unit} {ri.ingredient.name}
+              <%= if ri.notes do %>
+                <span class="text-gray-500">- {ri.notes}</span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+
+        <%= if @recipe.prep_time || @recipe.cook_time || @recipe.servings do %>
+          <div class="mt-6">
+            <h4 class="font-semibold mb-2">Recipe Info</h4>
+            <div class="text-sm space-y-1">
+              <%= if @recipe.prep_time do %>
+                <div>Prep: {@recipe.prep_time} min</div>
+              <% end %>
+              <%= if @recipe.cook_time do %>
+                <div>Cook: {@recipe.cook_time} min</div>
+              <% end %>
+              <%= if @recipe.servings do %>
+                <div>Servings: {@recipe.servings}</div>
+              <% end %>
+              <%= if @recipe.yield_description do %>
+                <div>Yield: {@recipe.yield_description}</div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="md:col-span-2">
+        <h3 class="text-xl font-semibold mb-4">Instructions</h3>
+        <ol class="list-decimal list-inside space-y-3">
+          <%= for instruction <- @recipe.instructions do %>
+            <li class="leading-relaxed">{instruction}</li>
+          <% end %>
+        </ol>
+
+        <%= if @recipe.notes do %>
+          <div class="mt-6">
+            <h4 class="font-semibold mb-2">Notes</h4>
+            <p class="text-gray-700">{@recipe.notes}</p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="card-actions justify-end mt-6">
+      <.link navigate={~p"/recipes/#{@recipe}/cooking"} class="btn btn-secondary">
+        Cooking Mode
+      </.link>
+      <.link patch={~p"/recipes/#{@recipe}/show/edit"} class="btn btn-primary">
+        Edit Recipe
+      </.link>
+    </div>
+  </div>
+</div>
 
 <.modal
   :if={@live_action == :edit}

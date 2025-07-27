@@ -15,14 +15,15 @@ defmodule RecipeForge.RecipesIngredientHandlingTest do
     end
 
     test "create_recipe with valid ingredients creates recipe and ingredients", %{recipe: _recipe} do
-      attrs = recipe_with_ingredients_attrs([
-        %{name: "flour", quantity: "2", unit: "cups", notes: "sifted"},
-        %{name: "sugar", quantity: "1", unit: "cup", notes: ""}
-      ])
+      attrs =
+        recipe_with_ingredients_attrs([
+          %{name: "flour", quantity: "2", unit: "cups", notes: "sifted"},
+          %{name: "sugar", quantity: "1", unit: "cup", notes: ""}
+        ])
 
       assert {:ok, %Recipe{} = recipe} = Recipes.create_recipe(attrs)
       assert length(recipe.recipe_ingredients) == 2
-      
+
       # Verify ingredients were created
       flour = Ingredients.find_or_create_by_name("flour")
       sugar = Ingredients.find_or_create_by_name("sugar")
@@ -52,7 +53,7 @@ defmodule RecipeForge.RecipesIngredientHandlingTest do
 
       assert {:ok, %Recipe{} = updated_recipe} = Recipes.update_recipe(recipe, attrs)
       assert length(updated_recipe.recipe_ingredients) == 1
-      
+
       ingredient = hd(updated_recipe.recipe_ingredients)
       assert ingredient.quantity == Decimal.new("1")
       assert ingredient.unit == "tsp"
@@ -84,19 +85,21 @@ defmodule RecipeForge.RecipesIngredientHandlingTest do
 
     test "update_recipe with ingredient marked for deletion", %{recipe: recipe} do
       # First add an ingredient
-      {:ok, recipe} = Recipes.update_recipe(recipe, %{
-        "recipe_ingredients" => %{
-          "0" => %{
-            "ingredient_name" => "onion",
-            "quantity" => "1",
-            "unit" => "whole",
-            "notes" => "diced"
+      {:ok, recipe} =
+        Recipes.update_recipe(recipe, %{
+          "recipe_ingredients" => %{
+            "0" => %{
+              "ingredient_name" => "onion",
+              "quantity" => "1",
+              "unit" => "whole",
+              "notes" => "diced"
+            }
           }
-        }
-      })
+        })
 
       # Now mark it for deletion
       [ingredient] = recipe.recipe_ingredients
+
       attrs = %{
         "recipe_ingredients" => %{
           "0" => %{
@@ -136,7 +139,7 @@ defmodule RecipeForge.RecipesIngredientHandlingTest do
 
       assert {:ok, %Recipe{} = updated_recipe} = Recipes.update_recipe(recipe, attrs)
       assert length(updated_recipe.recipe_ingredients) == 1
-      
+
       ingredient = hd(updated_recipe.recipe_ingredients)
       assert ingredient.quantity == Decimal.new("2")
       assert ingredient.unit == "cloves"
@@ -159,12 +162,13 @@ defmodule RecipeForge.RecipesIngredientHandlingTest do
             "notes" => ""
           }
         },
-        "ingredients_order" => ["1", "0"]  # Reversed order
+        # Reversed order
+        "ingredients_order" => ["1", "0"]
       }
 
       assert {:ok, %Recipe{} = updated_recipe} = Recipes.update_recipe(recipe, attrs)
       assert length(updated_recipe.recipe_ingredients) == 2
-      
+
       # Verify ingredients are in the correct order
       [first, second] = updated_recipe.recipe_ingredients
       assert first.display_order == 0
@@ -252,6 +256,7 @@ defmodule RecipeForge.RecipesIngredientHandlingTest do
   describe "change_recipe/2" do
     test "returns changeset for validation without duplicate checking" do
       recipe = %Recipe{}
+
       attrs = %{
         "name" => "Test Recipe",
         "description" => "Test description",

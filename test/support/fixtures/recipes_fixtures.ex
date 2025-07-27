@@ -4,7 +4,6 @@ defmodule RecipeForge.RecipesFixtures do
   entities via the `RecipeForge.Recipes` context.
   """
 
-
   @doc """
   Generate a recipe with proper string keys.
   """
@@ -22,7 +21,7 @@ defmodule RecipeForge.RecipesFixtures do
         "image_url" => "https://example.com/image.jpg",
         "notes" => "Test recipe notes",
         "nutrition" => %{},
-        "category_tags" => "test category",
+        "category_tags" => "testing",
         "recipe_ingredients" => %{}
       })
       |> RecipeForge.Recipes.create_recipe()
@@ -45,7 +44,7 @@ defmodule RecipeForge.RecipesFixtures do
       "image_url" => "https://example.com/image.jpg",
       "notes" => "Test recipe notes",
       "nutrition" => %{},
-      "category_tags" => "test category",
+      "category_tags" => "testing",
       "recipe_ingredients" => %{}
     })
   end
@@ -54,16 +53,17 @@ defmodule RecipeForge.RecipesFixtures do
   Generate recipe attributes with ingredients.
   """
   def recipe_with_ingredients_attrs(ingredient_data \\ []) do
-    ingredients = 
+    ingredients =
       ingredient_data
       |> Enum.with_index()
       |> Enum.into(%{}, fn {ingredient, index} ->
-        {Integer.to_string(index), %{
-          "ingredient_name" => ingredient[:name] || "ingredient_#{index}",
-          "quantity" => ingredient[:quantity] || "1",
-          "unit" => ingredient[:unit] || "cup",
-          "notes" => ingredient[:notes] || ""
-        }}
+        {Integer.to_string(index),
+         %{
+           "ingredient_name" => ingredient[:name] || "ingredient_#{index}",
+           "quantity" => ingredient[:quantity] || "1",
+           "unit" => ingredient[:unit] || "cup",
+           "notes" => ingredient[:notes] || ""
+         }}
       end)
 
     recipe_attrs(%{

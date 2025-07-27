@@ -15,6 +15,7 @@ defmodule RecipeForge.Ingredients.Ingredient do
     ingredient
     |> cast(attrs, [:name])
     |> validate_required([:name])
+    |> validate_length(:name, max: 255)
     |> unique_constraint(:name)
   end
 end

@@ -44,8 +44,9 @@ defmodule RecipeForge.Ingredients do
   def find_or_create_by_name(name) when is_binary(name) do
     sanitized_name = String.trim(name) |> String.downcase()
 
-    changeset = %Ingredient{}
-    |> Ingredient.changeset(%{name: sanitized_name})
+    changeset =
+      %Ingredient{}
+      |> Ingredient.changeset(%{name: sanitized_name})
 
     if changeset.valid? do
       Repo.insert(changeset, on_conflict: :nothing, conflict_target: :name)

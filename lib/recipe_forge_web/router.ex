@@ -17,7 +17,7 @@ defmodule RecipeForgeWeb.Router do
   scope "/", RecipeForgeWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", RecipeLive.Index, :index
 
     live "/categories", CategoryLive.Index, :index
     live "/categories/new", CategoryLive.Index, :new
@@ -39,6 +39,11 @@ defmodule RecipeForgeWeb.Router do
 
     live "/recipes/:id", RecipeLive.Show, :show
     live "/recipes/:id/show/edit", RecipeLive.Show, :edit
+    live "/recipes/:id/cooking", CookingLive.Show, :show
+
+    live "/browse", BrowseLive.Index, :index
+    live "/search", SearchLive.Index, :index
+    live "/favorites", FavoritesLive.Index, :index
 
     live "/ai_generate", AiGenerateLive.Index, :index
   end

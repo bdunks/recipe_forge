@@ -14,7 +14,12 @@
 
 <.back navigate={~p"/ingredients"}>Back to ingredients</.back>
 
-<.modal :if={@live_action == :edit} id="ingredient-modal" show on_cancel={JS.patch(~p"/ingredients/#{@ingredient}")}>
+<.modal
+  :if={@live_action == :edit}
+  id="ingredient-modal"
+  show
+  on_cancel={JS.patch(~p"/ingredients/#{@ingredient}")}
+>
   <.live_component
     module={RecipeForgeWeb.IngredientLive.FormComponent}
     id={@ingredient.id}

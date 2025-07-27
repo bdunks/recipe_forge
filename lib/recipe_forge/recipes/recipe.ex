@@ -19,6 +19,7 @@ defmodule RecipeForge.Recipes.Recipe do
     field :image_url, :string
     field :notes, :string
     field :nutrition, :map
+    field :is_favorite, :boolean, default: false
 
     has_many :recipe_ingredients, RecipeIngredient,
       preload_order: [asc: :display_order],
@@ -46,7 +47,8 @@ defmodule RecipeForge.Recipes.Recipe do
       :image_url,
       :notes,
       :nutrition,
-      :category_tags
+      :category_tags,
+      :is_favorite
     ])
     |> cast_instructions(attrs)
     |> validate_required([
@@ -143,5 +145,4 @@ defmodule RecipeForge.Recipes.Recipe do
 
     %{changeset | params: updated_params}
   end
-
 end

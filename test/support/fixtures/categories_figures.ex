@@ -13,11 +13,16 @@ defmodule RecipeForge.CategoriesFixtures do
   Generate a category.
   """
   def category_fixture(attrs \\ %{}) do
+    # Normalize string keys to atom keys to avoid mixed key maps
+    normalized_attrs = 
+      for {key, val} <- attrs, into: %{} do
+        atom_key = if is_binary(key), do: String.to_atom(key), else: key
+        {atom_key, val}
+      end
+
     {:ok, category} =
-      attrs
-      |> Enum.into(%{
-        name: unique_category_name()
-      })
+      %{name: unique_category_name()}
+      |> Map.merge(normalized_attrs)
       |> RecipeForge.Categories.create_category()
 
     category

@@ -25,6 +25,57 @@ defmodule RecipeForge.Recipes do
   """
   def list_recipes do
     Repo.all(Recipe)
+    |> Repo.preload([:categories, recipe_ingredients: :ingredient])
+  end
+
+  @doc """
+  Returns the list of recipes filtered by category.
+  If category_id is nil, returns all recipes.
+  """
+  def list_recipes_by_category(nil) do
+    list_recipes()
+  end
+
+  def list_recipes_by_category(category_id) do
+    # Convert string UUID to binary if needed
+    binary_category_id =
+      case category_id do
+        id when is_binary(id) and byte_size(id) == 36 -> Ecto.UUID.dump!(id)
+        id -> id
+      end
+
+    from(r in Recipe,
+      join: rc in "recipe_categories",
+      on: rc.recipe_id == r.id,
+      where: rc.category_id == ^binary_category_id,
+      preload: [:categories, recipe_ingredients: :ingredient]
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Searches recipes by name, description, category, or ingredient using database queries.
+  Returns an empty list for empty query strings.
+  """
+  def search_recipes(""), do: []
+
+  def search_recipes(query) when is_binary(query) do
+    query_pattern = "%#{String.downcase(query)}%"
+
+    from(r in Recipe,
+      left_join: c in assoc(r, :categories),
+      left_join: ri in assoc(r, :recipe_ingredients),
+      left_join: i in assoc(ri, :ingredient),
+      where:
+        ilike(r.name, ^query_pattern) or
+          ilike(r.description, ^query_pattern) or
+          ilike(c.name, ^query_pattern) or
+          ilike(i.name, ^query_pattern),
+      distinct: r.id,
+      order_by: [asc: r.id],
+      preload: [:categories, recipe_ingredients: :ingredient]
+    )
+    |> Repo.all()
   end
 
   @doc """
@@ -79,7 +130,7 @@ defmodule RecipeForge.Recipes do
         "name" => Map.get(ai_data, :name),
         "description" => Map.get(ai_data, :description),
         # The recipe changeset expects a single string for instructions
-        "instructions" => 
+        "instructions" =>
           case Map.get(ai_data, :instructions, []) do
             list when is_list(list) -> Enum.join(list, @instruction_separator)
             string when is_binary(string) -> string
@@ -95,7 +146,8 @@ defmodule RecipeForge.Recipes do
         "category_tags" => Map.get(ai_data, :category_name, @default_ai_category),
         "recipe_ingredients" =>
           (ai_data[:ingredients] || [])
-          |> Enum.with_index()  # Start at 0 for display_order
+          # Start at 0 for display_order
+          |> Enum.with_index()
           |> Enum.into(%{}, fn {ing_data, index} ->
             {Integer.to_string(index),
              %{
@@ -103,7 +155,8 @@ defmodule RecipeForge.Recipes do
                "quantity" => Map.get(ing_data, :quantity),
                "unit" => Map.get(ing_data, :unit),
                "notes" => Map.get(ing_data, :notes),
-               "display_order" => index  # Index starting at 0
+               # Index starting at 0
+               "display_order" => index
              }}
           end)
       }
@@ -117,24 +170,27 @@ defmodule RecipeForge.Recipes do
 
   defp execute_recipe_transaction(recipe, attrs, action) do
     repo_action = if action == :insert, do: &Repo.insert/1, else: &Repo.update/1
-    
+
     case Repo.transaction(fn ->
            case prepare_associations(attrs) do
              {:ok, prepared_attrs} ->
                recipe
                |> Recipe.changeset(prepared_attrs, action: :save)
                |> repo_action.()
-             
+
              {:error, :duplicate_ingredients} ->
                # Create proper error changeset and rollback
                changeset = Recipe.changeset(recipe, attrs, action: :save)
-               error_changeset = %{changeset | 
-                 action: action, 
-                 valid?: false,
-                 errors: [recipe_ingredients: {@duplicate_ingredients_error, []}]
+
+               error_changeset = %{
+                 changeset
+                 | action: action,
+                   valid?: false,
+                   errors: [recipe_ingredients: {@duplicate_ingredients_error, []}]
                }
+
                Repo.rollback(error_changeset)
-             
+
              {:error, reason} ->
                Repo.rollback(reason)
            end
@@ -201,8 +257,8 @@ defmodule RecipeForge.Recipes do
     ingredient_names =
       ingredients_attrs
       |> Enum.reject(fn {_key, params} -> params["_destroy"] == "true" end)
-      |> Enum.map(fn {_key, params} -> 
-        String.trim(params["ingredient_name"] || "") |> String.downcase() 
+      |> Enum.map(fn {_key, params} ->
+        String.trim(params["ingredient_name"] || "") |> String.downcase()
       end)
       |> Enum.reject(fn name -> name == "" end)
 
@@ -218,4 +274,34 @@ defmodule RecipeForge.Recipes do
   end
 
   defp validate_no_duplicate_ingredient_names(_), do: :ok
+
+  @doc """
+  Returns the list of favorite recipes.
+  """
+  def list_favorite_recipes do
+    from(r in Recipe,
+      where: r.is_favorite == true,
+      preload: [:categories, recipe_ingredients: :ingredient]
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Toggles the favorite status of a recipe.
+  """
+  def toggle_favorite(recipe) do
+    with {:ok, updated_recipe} <-
+           recipe
+           |> Recipe.changeset(%{is_favorite: !recipe.is_favorite})
+           |> Repo.update() do
+      {:ok, Repo.preload(updated_recipe, [:categories, recipe_ingredients: :ingredient])}
+    end
+  end
+
+  @doc """
+  Returns the total number of recipes.
+  """
+  def count_recipes do
+    Repo.aggregate(Recipe, :count, :id)
+  end
 end
