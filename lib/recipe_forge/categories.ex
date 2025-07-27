@@ -102,10 +102,6 @@ defmodule RecipeForge.Categories do
     |> Enum.uniq()
   end
 
-  defp sanitize_names(names) when is_binary(names) do
-    names |> String.split(" ", trim: true) |> sanitize_names()
-  end
-
   defp sanitize_names(_), do: []
 
   @doc """
