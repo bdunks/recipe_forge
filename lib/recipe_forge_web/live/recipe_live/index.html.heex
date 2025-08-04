@@ -19,17 +19,7 @@
 </div>
 
 <!-- Recipe Grid -->
-<div
-  class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-  id="recipes-grid"
-  phx-update="stream"
->
-  <RecipeForgeWeb.RecipeCard.recipe_card
-    :for={{dom_id, recipe} <- @streams.recipes}
-    dom_id={dom_id}
-    recipe={recipe}
-  />
-</div>
+<RecipeForgeWeb.RecipeCardGrid.recipe_card_grid recipes={@recipes} />
 
 <.modal
   :if={@live_action in [:new, :edit]}

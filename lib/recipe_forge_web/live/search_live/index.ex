@@ -2,6 +2,7 @@ defmodule RecipeForgeWeb.SearchLive.Index do
   use RecipeForgeWeb, :live_view
 
   alias RecipeForge.Recipes
+  alias RecipeForgeWeb.SharedHandlers
 
   @impl true
   def mount(params, _session, socket) do
@@ -30,18 +31,39 @@ defmodule RecipeForgeWeb.SearchLive.Index do
     {:noreply, socket}
   end
 
+  # Handle for the form submission
   @impl true
   def handle_event("search", %{"search" => %{"q" => query}}, socket) do
     {:noreply, push_patch(socket, to: ~p"/search?q=#{URI.encode(query)}")}
   end
 
-  def handle_event("toggle_favorite", %{"id" => id}, socket) do
-    RecipeForgeWeb.SharedHandlers.toggle_favorite(socket, id)
+  # Handle for the example button/span clicks.
+  @impl true
+  def handle_event("search", %{"q" => query}, socket) do
+    {:noreply, push_patch(socket, to: ~p"/search?q=#{URI.encode(query)}")}
+  end
+
+  @impl true
+  def handle_event("toggle_favorite", %{"id" => recipe_id}, socket) do
+    SharedHandlers.toggle_favorite(socket, recipe_id)
+  end
+
+  @impl true
+  def handle_info({:recipe_deleted, recipe_id}, socket) do
+    updated_recipes = Enum.reject(socket.assigns.recipes, &(&1.id == recipe_id))
+
+    socket =
+      socket
+      |> assign(recipes: updated_recipes)
+      |> put_flash(:info, "Recipe deleted successfully.")
+      |> perform_search(socket.assigns.query)
+
+    {:noreply, socket}
   end
 
   defp perform_search(socket, "") do
     socket
-    |> stream(:recipes, [])
+    |> assign(:recipes, [])
     |> assign(:recipe_count, 0)
   end
 
@@ -49,7 +71,7 @@ defmodule RecipeForgeWeb.SearchLive.Index do
     recipes = search_recipes(query)
 
     socket
-    |> stream(:recipes, recipes)
+    |> assign(:recipes, recipes)
     |> assign(:recipe_count, length(recipes))
   end
 

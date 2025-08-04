@@ -12,6 +12,7 @@
       <button
         class="btn btn-ghost btn-circle text-red-500"
         phx-click="toggle_favorite"
+        phx-value-id={@recipe.id}
         title={if @recipe.is_favorite, do: "Remove from Favorites", else: "Add to Favorites"}
       >
         <%= if @recipe.is_favorite do %>
@@ -81,13 +82,13 @@
     </div>
 
     <div class="card-actions justify-end mt-6 space-x-2">
-      <button
-        class="btn btn-error btn-outline"
-        phx-click="delete"
-        data-confirm="Are you sure you want to permanently delete this recipe?"
-      >
-        <.icon name="hero-trash" class="w-4 h-4" /> Delete Recipe
-      </button>
+      <!-- Delete button -->
+      <.live_component
+        module={RecipeForgeWeb.DeleteRecipeComponent}
+        id={"delete-recipe-#{@recipe.id}"}
+        recipe={@recipe}
+        variant={:button}
+      />
       <.link navigate={~p"/recipes/#{@recipe}/cooking"} class="btn btn-secondary">
         Cooking Mode
       </.link>
@@ -113,3 +114,15 @@
     patch={~p"/recipes/#{@recipe}"}
   />
 </.modal>
+
+<.confirmation_modal
+  :if={@show_delete_modal}
+  id="delete-recipe-modal"
+  show
+  title="Delete Recipe?"
+  message={"Are you sure you want to permanently delete \"#{@recipe.name}\"? This action cannot be undone."}
+  confirm_text="Delete Recipe"
+  cancel_text="Cancel"
+  on_confirm={JS.push("confirm_delete")}
+  on_cancel={JS.push("hide_delete_modal")}
+/>

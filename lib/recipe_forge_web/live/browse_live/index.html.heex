@@ -69,19 +69,8 @@
       </p>
     </div>
 
-    <div
-      id="recipes-grid"
-      phx-update="stream"
-      class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
-    >
-      <RecipeForgeWeb.RecipeCard.recipe_card
-        :for={{dom_id, recipe} <- @streams.recipes}
-        dom_id={dom_id}
-        recipe={recipe}
-      />
-    </div>
-    
-<!-- Empty State -->
+    <RecipeForgeWeb.RecipeCardGrid.recipe_card_grid recipes={@recipes} />
+    <!-- Empty State -->
     <%= if @empty_recipes do %>
       <div class="text-center py-12">
         <div class="mx-auto w-24 h-24 bg-base-200 rounded-full flex items-center justify-center mb-4">

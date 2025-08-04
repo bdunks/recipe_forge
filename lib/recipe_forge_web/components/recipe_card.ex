@@ -2,51 +2,53 @@ defmodule RecipeForgeWeb.RecipeCard do
   @moduledoc """
   Recipe card component for displaying recipes in a grid layout.
   """
+  alias RecipeForgeWeb.SharedHandlers
   use RecipeForgeWeb, :html
 
   @doc """
   Renders a recipe card with interactive favorite toggle.
   """
   attr :recipe, :map, required: true
-  attr :dom_id, :string, required: true
 
   def recipe_card(assigns) do
     ~H"""
     <div
-      id={@dom_id}
+      id={"recipes-#{@recipe.id}"}
       class="card card-compact bg-base-100 shadow-xl hover:shadow-2xl transition-shadow relative"
     >
       <.link navigate={~p"/recipes/#{@recipe.id}"} class="block">
         <figure>
-          <%= if Map.get(@recipe, :image_url) do %>
-            <img src={@recipe.image_url} alt={@recipe.name} class="h-48 w-full object-cover" />
-          <% else %>
-            <div class="h-48 w-full bg-gradient-to-br from-orange-200 to-pink-200 flex items-center justify-center">
-              <.icon name="hero-camera" class="h-12 w-12 text-gray-400" />
-            </div>
-          <% end %>
+          <img
+            :if={@recipe.image_url}
+            src={@recipe.image_url}
+            alt={@recipe.name}
+            class="h-48 w-full object-cover"
+          />
+          <div
+            :if={is_nil(@recipe.image_url)}
+            class="h-48 w-full bg-gradient-to-br from-orange-200 to-pink-200 flex items-center justify-center"
+          >
+            <.icon name="hero-camera" class="h-12 w-12 text-gray-400" />
+          </div>
         </figure>
         <div class="card-body">
           <h2 class="card-title text-lg font-semibold">{@recipe.name}</h2>
           <div class="card-actions justify-between items-center">
             <div class="flex flex-wrap gap-1">
-              <%= for category <- @recipe.categories do %>
-                <div class="badge badge-outline text-xs">{category.name}</div>
-              <% end %>
+              <div :for={category <- @recipe.categories} class="badge badge-outline text-xs">
+                {category.name}
+              </div>
             </div>
           </div>
         </div>
       </.link>
       
     <!-- Delete button -->
-      <button
-        phx-click={JS.push("delete", value: %{id: @recipe.id}) |> JS.hide(to: "##{@dom_id}")}
-        data-confirm="Are you sure you want to delete this recipe?"
-        class="absolute top-2 left-2 btn btn-circle btn-ghost btn-sm bg-white/80 hover:bg-white/90 text-red-500 hover:text-red-700"
-        title="Delete recipe"
-      >
-        <.icon name="hero-trash" class="h-5 w-5" />
-      </button>
+      <.live_component
+        module={RecipeForgeWeb.DeleteRecipeComponent}
+        id={"delete-recipe-#{@recipe.id}"}
+        recipe={@recipe}
+      />
       
     <!-- Interactive favorite toggle button -->
       <button

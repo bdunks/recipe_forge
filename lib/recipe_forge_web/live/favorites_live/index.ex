@@ -2,7 +2,7 @@ defmodule RecipeForgeWeb.FavoritesLive.Index do
   use RecipeForgeWeb, :live_view
 
   alias RecipeForge.Recipes
-
+  alias RecipeForgeWeb.SharedHandlers
   @impl true
   def mount(_params, _session, socket) do
     favorites = Recipes.list_favorite_recipes()
@@ -11,7 +11,7 @@ defmodule RecipeForgeWeb.FavoritesLive.Index do
       socket
       |> assign(:page_title, "Favorite Recipes")
       |> assign(:has_favorites, length(favorites) > 0)
-      |> stream(:recipes, favorites)
+      |> assign(:recipes, favorites)
 
     {:ok, socket}
   end
@@ -22,27 +22,27 @@ defmodule RecipeForgeWeb.FavoritesLive.Index do
   end
 
   @impl true
-  def handle_event("toggle_favorite", %{"id" => id}, socket) do
-    recipe = Recipes.get_recipe!(id)
+  def handle_event("toggle_favorite", %{"id" => recipe_id}, socket) do
+    SharedHandlers.toggle_favorite(socket, recipe_id)
+  end
 
-    case Recipes.toggle_favorite(recipe) do
-      {:ok, updated_recipe} ->
-        if updated_recipe.is_favorite do
-          # Recipe was favorited (shouldn't happen on favorites page, but handle gracefully)
-          {:noreply, put_flash(socket, :info, "Recipe added to favorites")}
-        else
-          # Recipe was unfavorited - remove from favorites page
-          remaining_favorites = Recipes.list_favorite_recipes()
+  @impl true
+  def handle_info({:recipe_deleted, recipe_id}, socket) do
+    updated_recipes = Enum.reject(socket.assigns.recipes, &(&1.id == recipe_id))
 
-          {:noreply,
-           socket
-           |> stream_delete(:recipes, recipe)
-           |> assign(:has_favorites, length(remaining_favorites) > 0)
-           |> put_flash(:info, "Recipe removed from favorites")}
-        end
+    socket =
+      socket
+      |> assign(recipes: updated_recipes)
+      |> put_flash(:info, "Recipe deleted successfully.")
+      |> recalculate_favorites()
 
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Could not update favorite status")}
-    end
+    {:noreply, socket}
+  end
+
+  defp recalculate_favorites(socket) do
+    remaining_favorites = Recipes.list_favorite_recipes()
+
+    socket
+    |> assign(:has_favorites, length(remaining_favorites) > 0)
   end
 end

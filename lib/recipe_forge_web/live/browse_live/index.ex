@@ -3,6 +3,7 @@ defmodule RecipeForgeWeb.BrowseLive.Index do
 
   alias RecipeForge.Categories
   alias RecipeForge.Recipes
+  alias RecipeForgeWeb.SharedHandlers
 
   @impl true
   def mount(_params, _session, socket) do
@@ -22,7 +23,7 @@ defmodule RecipeForgeWeb.BrowseLive.Index do
       |> assign(:selected_category_id, nil)
       |> assign(:selected_category_name, "All")
       |> assign(:empty_recipes, length(recipes) == 0)
-      |> stream(:recipes, recipes)
+      |> assign(:recipes, recipes)
 
     {:ok, socket}
   end
@@ -56,7 +57,7 @@ defmodule RecipeForgeWeb.BrowseLive.Index do
     |> assign(:selected_category_id, category_id)
     |> assign(:selected_category_name, selected_category_name)
     |> assign(:empty_recipes, length(recipes) == 0)
-    |> stream(:recipes, recipes, reset: true)
+    |> assign(:recipes, recipes)
   end
 
   @impl true
@@ -73,7 +74,45 @@ defmodule RecipeForgeWeb.BrowseLive.Index do
     {:noreply, push_patch(socket, to: path)}
   end
 
-  def handle_event("toggle_favorite", %{"id" => id}, socket) do
-    RecipeForgeWeb.SharedHandlers.toggle_favorite(socket, id)
+  @impl true
+  def handle_event("toggle_favorite", %{"id" => recipe_id}, socket) do
+    SharedHandlers.toggle_favorite(socket, recipe_id)
+  end
+
+  @impl true
+  def handle_info({:recipe_deleted, recipe_id}, socket) do
+    updated_recipes = Enum.reject(socket.assigns.recipes, &(&1.id == recipe_id))
+
+    socket =
+      socket
+      |> assign(recipes: updated_recipes)
+      |> put_flash(:info, "Recipe deleted successfully.")
+      |> recalculate_stats()
+
+    {:noreply, socket}
+  end
+
+  def recalculate_stats(socket) do
+    # Recalculate category counts after deletion
+    categories =
+      Categories.list_categories_with_recipe_count()
+      |> Enum.filter(&(&1.recipe_count > 0))
+
+    categories_map = Map.new(categories, &{&1.id, &1})
+    total_recipes = Recipes.count_recipes()
+
+    # Get updated recipes for current filter
+    recipes =
+      case socket.assigns.selected_category_id do
+        nil -> Recipes.list_recipes()
+        id -> Recipes.list_recipes_by_category(id)
+      end
+
+    socket
+    |> assign(:categories, categories)
+    |> assign(:categories_map, categories_map)
+    |> assign(:total_recipes, total_recipes)
+    |> assign(:empty_recipes, length(recipes) == 0)
+    |> assign(:recipes, recipes)
   end
 end

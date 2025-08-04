@@ -39,17 +39,7 @@
     
 <!-- Results Grid -->
     <%= if @recipe_count > 0 do %>
-      <div
-        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-        id="search-results"
-        phx-update="stream"
-      >
-        <RecipeForgeWeb.RecipeCard.recipe_card
-          :for={{dom_id, recipe} <- @streams.recipes}
-          dom_id={dom_id}
-          recipe={recipe}
-        />
-      </div>
+      <RecipeForgeWeb.RecipeCardGrid.recipe_card_grid recipes={@recipes} />
     <% else %>
       <div class="text-center py-12 bg-base-100 rounded-lg">
         <div class="text-gray-500 text-lg mb-4">
@@ -84,28 +74,28 @@
             <span
               class="badge badge-outline cursor-pointer"
               phx-click="search"
-              phx-value-search[q]="chicken"
+              phx-value-q="chicken"
             >
               chicken
             </span>
             <span
               class="badge badge-outline cursor-pointer"
               phx-click="search"
-              phx-value-search[q]="pasta"
+              phx-value-q="pasta"
             >
               pasta
             </span>
             <span
               class="badge badge-outline cursor-pointer"
               phx-click="search"
-              phx-value-search[q]="dessert"
+              phx-value-q="dessert"
             >
               dessert
             </span>
             <span
               class="badge badge-outline cursor-pointer"
               phx-click="search"
-              phx-value-search[q]="vegetarian"
+              phx-value-q="vegetarian"
             >
               vegetarian
             </span>

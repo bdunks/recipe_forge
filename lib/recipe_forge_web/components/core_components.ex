@@ -39,6 +39,9 @@ defmodule RecipeForgeWeb.CoreComponents do
   attr :id, :string, required: true
   attr :show, :boolean, default: false
   attr :on_cancel, JS, default: %JS{}
+  attr :show_close, :boolean, default: true
+  attr :container_class, :string, default: "max-w-3xl sm:p-6 lg:py-8"
+  attr :panel_class, :string, default: "p-14"
   slot :inner_block, required: true
 
   def modal(assigns) do
@@ -60,15 +63,18 @@ defmodule RecipeForgeWeb.CoreComponents do
         tabindex="0"
       >
         <div class="flex min-h-full items-center justify-center">
-          <div class="w-full max-w-3xl p-4 sm:p-6 lg:py-8">
+          <div class={["w-full p-4", @container_class]}>
             <.focus_wrap
               id={"#{@id}-container"}
               phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
               phx-key="escape"
               phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
-              class="shadow-zinc-700/10 ring-zinc-700/10 relative hidden rounded-2xl bg-white p-14 shadow-lg ring-1 transition"
+              class={[
+                "shadow-zinc-700/10 ring-zinc-700/10 relative hidden rounded-2xl bg-white shadow-lg ring-1 transition",
+                @panel_class
+              ]}
             >
-              <div class="absolute top-6 right-5">
+              <div :if={@show_close} class="absolute top-6 right-5">
                 <button
                   phx-click={JS.exec("data-cancel", to: "##{@id}")}
                   type="button"
@@ -86,6 +92,81 @@ defmodule RecipeForgeWeb.CoreComponents do
         </div>
       </div>
     </div>
+    """
+  end
+
+  @doc """
+  Renders a confirmation modal for dangerous actions.
+
+  This component provides a beautiful, accessible confirmation dialog that replaces
+  browser-native confirm dialogs. It's designed for delete actions and other
+  destructive operations.
+
+  ## Examples
+
+      <.confirmation_modal
+        id="delete-recipe-modal"
+        show={@show_delete_modal}
+        title="Delete Recipe?"
+        message="Are you sure you want to permanently delete this recipe? This action cannot be undone."
+        confirm_text="Delete Recipe"
+        cancel_text="Cancel"
+        on_confirm={JS.push("confirm_delete")}
+        on_cancel={JS.push("hide_delete_modal")}
+      />
+
+  """
+  attr :id, :string, required: true
+  attr :show, :boolean, default: false
+  attr :title, :string, required: true
+  attr :message, :string, required: true
+  attr :confirm_text, :string, default: "Confirm"
+  attr :cancel_text, :string, default: "Cancel"
+  attr :on_confirm, JS, required: true
+  attr :on_cancel, JS, required: true
+  attr :danger, :boolean, default: true
+
+  def confirmation_modal(assigns) do
+    ~H"""
+    <.modal
+      id={@id}
+      show={@show}
+      show_close={false}
+      on_cancel={@on_cancel}
+      container_class="max-w-md"
+      panel_class="!p-6"
+    >
+      <div class="text-center">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 mb-4">
+          <.icon name="hero-exclamation-triangle" class="h-6 w-6 text-red-600" />
+        </div>
+
+        <h3 id={"#{@id}-title"} class="text-lg font-semibold text-gray-900 mb-2">
+          {@title}
+        </h3>
+
+        <p id={"#{@id}-description"} class="text-sm text-gray-500 mb-6">
+          {@message}
+        </p>
+
+        <div class="flex gap-3 justify-center">
+          <button type="button" phx-click={JS.exec(@on_cancel, "phx-remove")} class="btn btn-ghost">
+            {@cancel_text}
+          </button>
+          <button
+            type="button"
+            phx-click={JS.exec(@on_confirm, "phx-remove")}
+            class={[
+              "btn",
+              if(@danger, do: "btn-error", else: "btn-primary")
+            ]}
+          >
+            <.icon :if={@danger} name="hero-trash" class="w-4 h-4 mr-1" />
+            {@confirm_text}
+          </button>
+        </div>
+      </div>
+    </.modal>
     """
   end
 

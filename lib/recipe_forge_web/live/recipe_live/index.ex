@@ -3,6 +3,7 @@ defmodule RecipeForgeWeb.RecipeLive.Index do
 
   alias RecipeForge.Recipes
   alias RecipeForge.Recipes.Recipe
+  alias RecipeForgeWeb.SharedHandlers
 
   @impl true
   def mount(_params, _session, socket) do
@@ -11,7 +12,8 @@ defmodule RecipeForgeWeb.RecipeLive.Index do
     socket =
       socket
       |> assign(:url_form, url_form)
-      |> stream(:recipes, Recipes.list_recipes())
+      |> assign(:recipe_to_delete, nil)
+      |> assign(:recipes, Recipes.list_recipes())
 
     {:ok, socket}
   end
@@ -40,25 +42,30 @@ defmodule RecipeForgeWeb.RecipeLive.Index do
   end
 
   @impl true
+  def handle_event("toggle_favorite", %{"id" => recipe_id}, socket) do
+    SharedHandlers.toggle_favorite(socket, recipe_id)
+  end
+
+  @impl true
+  def handle_info({:recipe_deleted, recipe_id}, socket) do
+    updated_recipes = Enum.reject(socket.assigns.recipes, &(&1.id == recipe_id))
+
+    socket =
+      socket
+      |> put_flash(:info, "Recipe deleted successfully.")
+      |> assign(recipes: updated_recipes)
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info({RecipeForgeWeb.RecipeLive.FormComponent, {:saved, recipe}}, socket) do
-    {:noreply, stream_insert(socket, :recipes, recipe)}
+    {:noreply, assign(socket, :recipes, socket.assigns.recipes ++ [recipe])}
   end
 
   @impl true
   def handle_event("generate_from_url", %{"url" => %{"url" => url}}, socket) do
     # For now, redirect to AI generation page with the URL
     {:noreply, push_navigate(socket, to: ~p"/ai_generate?url=#{URI.encode(url)}")}
-  end
-
-  @impl true
-  def handle_event("delete", %{"id" => id}, socket) do
-    recipe = Recipes.get_recipe!(id)
-    {:ok, _} = Recipes.delete_recipe(recipe)
-
-    {:noreply, stream_delete(socket, :recipes, recipe)}
-  end
-
-  def handle_event("toggle_favorite", %{"id" => id}, socket) do
-    RecipeForgeWeb.SharedHandlers.toggle_favorite(socket, id)
   end
 end

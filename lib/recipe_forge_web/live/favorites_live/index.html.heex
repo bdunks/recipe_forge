@@ -1,17 +1,7 @@
 <h1 class="text-3xl font-bold mb-6">Favorite Recipes</h1>
 
 <%= if @has_favorites do %>
-  <div
-    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-    id="favorites-grid"
-    phx-update="stream"
-  >
-    <RecipeForgeWeb.RecipeCard.recipe_card
-      :for={{dom_id, recipe} <- @streams.recipes}
-      dom_id={dom_id}
-      recipe={recipe}
-    />
-  </div>
+  <RecipeForgeWeb.RecipeCardGrid.recipe_card_grid recipes={@recipes} />
 <% else %>
   <!-- Empty State -->
   <div class="text-center py-16">

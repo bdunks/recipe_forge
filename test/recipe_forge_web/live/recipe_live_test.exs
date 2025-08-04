@@ -111,10 +111,21 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
       dom_id = "recipes-#{recipe.id}"
       assert has_element?(index_live, "##{dom_id}")
 
+      # Click delete button in the LiveComponent using DOM selector
       index_live
-      |> element("##{dom_id} button[title='Delete recipe']")
+      |> element("##{dom_id} button[phx-click='show_modal']")
       |> render_click()
 
+      # Verify modal is shown (modal ID includes recipe ID)
+      modal_id = "delete-recipe-modal-#{recipe.id}"
+      assert has_element?(index_live, "##{modal_id}")
+
+      # Click confirm delete button in modal
+      index_live
+      |> element("##{modal_id} button[phx-click*='confirm_delete']")
+      |> render_click()
+
+      # Verify recipe is removed
       refute has_element?(index_live, "##{dom_id}")
     end
   end
@@ -154,11 +165,22 @@ defmodule RecipeForgeWeb.RecipeLiveTest do
     test "deletes recipe from show page", %{conn: conn, recipe: recipe} do
       {:ok, show_live, _html} = live(conn, ~p"/recipes/#{recipe}")
 
+      # Click delete button in the LiveComponent using DOM selector
       show_live
-      |> element("button", "Delete Recipe")
+      |> element("button[phx-click='show_modal']")
       |> render_click()
 
-      assert_redirected(show_live, ~p"/recipes")
+      # Verify modal is shown (modal ID includes recipe ID)
+      modal_id = "delete-recipe-modal-#{recipe.id}"
+      assert has_element?(show_live, "##{modal_id}")
+
+      # Click confirm delete button in modal
+      show_live
+      |> element("##{modal_id} button[phx-click*='confirm_delete']")
+      |> render_click()
+
+      # Verify navigation after deletion (push_navigate is used)
+      assert_redirect(show_live, ~p"/recipes")
     end
   end
 
