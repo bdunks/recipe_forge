@@ -62,10 +62,19 @@ defmodule RecipeForge.Recipes.Recipe do
       min: 1,
       message: "should have at least %{count} instruction"
     )
-    |> put_assoc(:categories, Map.get(attrs, "categories", []))
+    |> maybe_put_categories(attrs)
     |> cast_ingredients(attrs, opts)
 
     # The context provides a `categories` key with the structs ready for association.
+  end
+
+  # Only update categories association when explicitly provided
+  defp maybe_put_categories(changeset, attrs) do
+    if Map.has_key?(attrs, "categories") do
+      put_assoc(changeset, :categories, Map.get(attrs, "categories", []))
+    else
+      changeset
+    end
   end
 
   # This function handles the transformation for the :instructions field.

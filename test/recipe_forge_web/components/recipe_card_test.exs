@@ -15,7 +15,7 @@ defmodule RecipeForgeWeb.RecipeCardTest do
 
       assigns = %{recipe: recipe}
       rendered = recipe_card(assigns)
-      
+
       # Verify the component renders without errors
       assert %Phoenix.LiveView.Rendered{} = rendered
       # Verify the recipe data is properly assigned
@@ -33,7 +33,7 @@ defmodule RecipeForgeWeb.RecipeCardTest do
 
       assigns = %{recipe: recipe}
       rendered = recipe_card(assigns)
-      
+
       # Verify the component renders without errors
       assert %Phoenix.LiveView.Rendered{} = rendered
       assert assigns.recipe.image_url == nil
@@ -50,7 +50,7 @@ defmodule RecipeForgeWeb.RecipeCardTest do
 
       assigns = %{recipe: recipe}
       rendered = recipe_card(assigns)
-      
+
       # Verify the component renders without errors
       assert %Phoenix.LiveView.Rendered{} = rendered
       assert assigns.recipe.image_url == "https://example.com/image.jpg"
@@ -67,7 +67,7 @@ defmodule RecipeForgeWeb.RecipeCardTest do
 
       assigns = %{recipe: recipe}
       rendered = recipe_card(assigns)
-      
+
       # Verify the component renders without errors
       assert %Phoenix.LiveView.Rendered{} = rendered
       assert assigns.recipe.is_favorite == false
@@ -84,7 +84,7 @@ defmodule RecipeForgeWeb.RecipeCardTest do
 
       assigns = %{recipe: recipe}
       rendered = recipe_card(assigns)
-      
+
       # Verify the component renders without errors
       assert %Phoenix.LiveView.Rendered{} = rendered
       assert assigns.recipe.is_favorite == true
@@ -101,7 +101,7 @@ defmodule RecipeForgeWeb.RecipeCardTest do
 
       assigns = %{recipe: recipe}
       rendered = recipe_card(assigns)
-      
+
       # Verify the component renders without errors
       assert %Phoenix.LiveView.Rendered{} = rendered
       # Delete functionality is handled by DeleteRecipeComponent

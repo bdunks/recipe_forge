@@ -38,6 +38,28 @@ defmodule RecipeForge.RecipesFavoritesTest do
       assert updated_recipe.is_favorite == false
     end
 
+    test "toggle_favorite/1 preserves categories when toggling favorite status" do
+      recipe =
+        recipe_fixture(%{
+          "name" => "Test Recipe",
+          "category_tags" => "breakfast,healthy",
+          "is_favorite" => false
+        })
+
+      # Ensure the recipe has categories before toggle
+      recipe_with_preloads = Recipes.get_recipe!(recipe.id)
+      assert length(recipe_with_preloads.categories) > 0
+      original_categories = recipe_with_preloads.categories
+
+      # Toggle favorite status
+      assert {:ok, updated_recipe} = Recipes.toggle_favorite(recipe_with_preloads)
+
+      # Categories should be preserved
+      assert updated_recipe.is_favorite == true
+      assert length(updated_recipe.categories) == length(original_categories)
+      assert updated_recipe.categories == original_categories
+    end
+
     test "favorites are preserved when updating other recipe fields" do
       recipe = recipe_fixture(%{"name" => "Test Recipe", "is_favorite" => true})
 
