@@ -16,7 +16,6 @@
       "Bash(find:*)",
       "Bash(find:*)",
       "mcp__tidewave__get_source_location",
-      "Bash(rm:*)",
       "Bash(mix ecto.gen.migration:*)",
       "Bash(mix ecto.migrate:*)",
       "mcp__playwright__browser_navigate",

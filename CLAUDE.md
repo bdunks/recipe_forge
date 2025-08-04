@@ -1,101 +1,30 @@
 # RecipeForge Development Guide
 
-RecipeForge is a Phoenix LiveView application for recipe management with AI integration capabilities.
+Phoenix LiveView recipe management app with AI integration.
 
-## General Guidance
+## Key Notes:
+- **Server is running on port 4000** (standard Phoenix port)
+- **IMPORTANT**: **Use Tidewave MCP tools** for: SQL queries, Elixir code execution, source location lookup, runtime introspection, Hex docs, Ecto schemas
 
-- Spawn multiple sub-agents whenever beneficial to speed and context
-- Follow the Explore -> Plan -> Code -> Commit cycle
-- Follow a Test Driven Development Cycle
-  - Write tests based on expected inputs and outputs
-  - Run the tests and confirm they fail
-  - Write code that passes the test.  Do not modify the tests.  Keep giong until all test pass.  Verify with indepenent sub-agents. 
-- If executing a plan originating from <plan>.md file in `llm_context\plan\` file, update the plan file after each step with current status so it can be resumed in a new context at any time.
+## Bash Commands
+- `mix phx.server` - Start dev server (port 4000)
+- `mix test` - Run all tests
+- `mix format` - Format Elixir code (run before commits)
+- `mix compile` - Compile project
+- `mix ecto.migrate` - Run database migrations
 
-## Core Principles
-
-- Write clean, concise, functional code using small, focused functions.
-- **Explicit Over Implicit**: Prefer clarity over magic.
-- **Single Responsibility**: Each module and function should do one thing well.
-- **Easy to Change**: Design for maintainability and future change.
-- **YAGNI**: Don't build features until they're needed.
-
-## Project Structure
-
-- **Phoenix Context Pattern**: Organize business logic into domain contexts (`RecipeForge.Recipes`, `RecipeForge.Categories`, `RecipeForge.Ingredients`).
-- **Separation of Core and UI**: Keep business logic in contexts separate from web layer in `RecipeForgeWeb`.
-- **LiveView-First Web Layer**: Use LiveView for interactive UIs with CoreComponents for reusable elements.
-
-## Coding Style
-
-- **Follow standard Elixir practices** and let `mix format` take care of formatting (run before committing Elixir code).
-- **Always assume the server is running on port 4000**
-- **Use Tidewave MCP to: run SQL queries, run elixir code, get source location of functions and modules without grepping the filesystem, introspect the logs and runtime, fetch documentation from hex docs, see all the ecto schemas, and much more**
-- **Use one module per file** unless the module is only used internally by another module.
-- **Use appropriate pipe operators**: Use standard `|>` for function chaining.
-- **Prefer using full module names or aliases** rather than imports.
-- **Use descriptive variable and function names**: e.g., `recipe_valid?`, `prepare_associations`.
-- **Prefer higher-order functions and recursion** over imperative loops.
-
-## Naming Conventions
-
-- **Verb-First Functions**: Start function names with verbs (`create_recipe`, not `recipe_create`).
-- **Singular/Plural Naming**: Use singular for DB tables and schema modules, plural for contexts.
-- **LiveView Naming**: Use `Live` suffix for LiveView modules (`RecipeLive.Index`, `RecipeLive.Show`).
-- **Component Naming**: Use `Component` suffix for LiveComponents (`RecipeFormComponent`).
-- **Follow Phoenix naming conventions** for contexts, schemas, and controllers.
-
-## Error Handling
-
-- **Embrace the "let it crash" philosophy**.
-- **Railway-Oriented Programming**: Chain operations with `with` for elegant error handling:
-    
-    ```elixir
-    with 
-      {:ok, recipe} <- find_recipe(id),
-      {:ok, updated} <- update_recipe(recipe, attrs) 
-    do  
-      {:ok, updated}
-    end
-    ```
-    
-- **Result Tuples**: Return tagged tuples like `{:ok, result}` or `{:error, reason}` for operations that can fail, unless the function name ends with `!`.
-- **User-friendly error messages**: Implement proper error logging and user-friendly messages, using `put_flash` in LiveView.
-- **Transaction Safety**: Use `Repo.transaction` for operations that modify multiple tables (e.g., recipe with ingredients).
-
-## Data Validation and Database
-
-- **Use Ecto changesets** for data validation, even outside of database contexts.
-- **Transaction Safety**: Wrap multi-table operations in `Repo.transaction` for data consistency.
-- **Implement proper indexing** for performance.
-
-## UI and Frontend
-
-- **Use Phoenix LiveView** for dynamic, real-time interactions.
-- **Implement responsive design** with DaisyUI components and Tailwind CSS.
-- **Function Components**: Create reusable function components and LiveComponents for UI elements.
-- **Phoenix helpers**: Put `handle_event` functions in a shared `LiveHandler` module per extension to keep views and components DRY.
-- **Accessibility**: Apply best practices such as **WCAG**.
+## Code Style
+- Follow Phoenix Context Pattern: `RecipeForge.Recipes`, `RecipeForgeWeb.RecipeLive`
+- LiveView-first UI with DaisyUI/Tailwind CSS
+- Verb-first function names: `create_recipe`, not `recipe_create`
+- Railway-oriented programming with `with` for error handling
+- Return `{:ok, result}` or `{:error, reason}` tuples
 
 ## Testing
+- TDD cycle: Write failing tests → Make them pass → Don't modify tests unless directed otherwise
+- Use test fixtures from `test/support/fixtures/`
+- LiveView testing: `render_click`, `render_submit`, `render_change`
 
-- **Add tests for all new functionality**.
-- Include doctests for pure functions (even if that means making private functions public) and test suites focused on public context APIs or UI flows.
-- **Use test fixtures** for test data creation from `test/support/fixtures/`.
-- **Arrange-Act-Assert**: Structure tests with clear setup, action, and verification phases.
-- **SQL Sandbox**: Database tests use isolated transactions for reliability.
-- **LiveView Testing**: Use `render_click`, `render_submit`, `render_change` for interactive UI testing.
-
-## Security
-
-- **Security First**: Always consider security implications (CSRF, XSS, etc.).
-- **Use strong parameters** in controllers (params validation).
-- **Protect against common web vulnerabilities** (XSS, CSRF, SQL injection).
-
-## Documentation and Quality
-
-- Describe why, not what it does.
-- **Document Public Functions**: Add `@doc` to all public functions.
-- **Examples in Docs**: Include examples in documentation (as doctests when possible).
-- **Cautious Refactoring**: Propose bug fixes or optimizations without changing behavior or unrelated code.
-- **Comments**: Write comments only when information cannot be included in docs.
+## Project-Specific Notes
+- Put `handle_event` functions in shared `LiveHandler` modules
+- Plans in `llm_context/plan/` should be updated after each step

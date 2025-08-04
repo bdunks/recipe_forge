@@ -23,7 +23,9 @@
     "mix.exs",
     "mix.lock",
     "*.livemd",
-    "CLAUDE.md"
+    "CLAUDE.md",
+    "lib/recipe_forge",
+    "test"
   ],
   "max_file_size_mb": 2.0,
   "include_hidden": false,
