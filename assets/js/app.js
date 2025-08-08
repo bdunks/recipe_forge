@@ -27,7 +27,6 @@ import Sortable from "../vendor/sortable"
  * @type {import("phoenix_live_view").HooksOptions}
  */
 let Hooks = {};
-// TODO - The UI is a bit wonky with this; text highlights etc.
 Hooks.SortableInputsFor = {
   mounted(){
     let group = this.el.dataset.group
@@ -38,7 +37,11 @@ Hooks.SortableInputsFor = {
       ghostClass: "drag-ghost",
       handle: "[data-handle]",
       forceFallback: true,
+      onStart: e => {
+        document.body.classList.add('drag-no-select')
+      },
       onEnd: e => {
+        document.body.classList.remove('drag-no-select')
         this.el.closest("form").querySelector("input").dispatchEvent(new Event("input", {bubbles: true}))
       }
     })

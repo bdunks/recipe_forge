@@ -46,7 +46,7 @@ defmodule RecipeForgeWeb.RecipeLive.FormComponent do
                       "flex items-center space-x-2 mb-2 drag-item",
                       if(destroy, do: "opacity-50 grayscale")
                     ]}>
-                      <.icon name="hero-bars-3" class="w-6 h-6 relative top-2" data-handle />
+                      <.icon name="hero-bars-3" class="w-12 h-12 mt-14 cursor-grab" data-handle />
                       <input
                         type="hidden"
                         name="recipe[ingredients_order][]"

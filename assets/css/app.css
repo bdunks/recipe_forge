@@ -3,3 +3,20 @@
 @import "tailwindcss/utilities";
 
 /* This file is for your main application CSS */
+
+/* Prevent text selection during drag operations */
+.drag-no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Ensure input fields remain selectable even during drag */
+.drag-no-select input,
+.drag-no-select textarea {
+  -webkit-user-select: auto;
+  -moz-user-select: auto;
+  -ms-user-select: auto;
+  user-select: auto;
+}

@@ -2,7 +2,6 @@ defmodule RecipeForgeWeb.RecipeCard do
   @moduledoc """
   Recipe card component for displaying recipes in a grid layout.
   """
-  alias RecipeForgeWeb.SharedHandlers
   use RecipeForgeWeb, :html
 
   @doc """

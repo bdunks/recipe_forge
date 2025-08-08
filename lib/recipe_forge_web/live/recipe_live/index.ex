@@ -47,6 +47,12 @@ defmodule RecipeForgeWeb.RecipeLive.Index do
   end
 
   @impl true
+  def handle_event("generate_from_url", %{"url" => %{"url" => url}}, socket) do
+    # For now, redirect to AI generation page with the URL
+    {:noreply, push_navigate(socket, to: ~p"/ai_generate?url=#{URI.encode(url)}")}
+  end
+
+  @impl true
   def handle_info({:recipe_deleted, recipe_id}, socket) do
     updated_recipes = Enum.reject(socket.assigns.recipes, &(&1.id == recipe_id))
 
@@ -61,11 +67,5 @@ defmodule RecipeForgeWeb.RecipeLive.Index do
   @impl true
   def handle_info({RecipeForgeWeb.RecipeLive.FormComponent, {:saved, recipe}}, socket) do
     {:noreply, assign(socket, :recipes, socket.assigns.recipes ++ [recipe])}
-  end
-
-  @impl true
-  def handle_event("generate_from_url", %{"url" => %{"url" => url}}, socket) do
-    # For now, redirect to AI generation page with the URL
-    {:noreply, push_navigate(socket, to: ~p"/ai_generate?url=#{URI.encode(url)}")}
   end
 end
