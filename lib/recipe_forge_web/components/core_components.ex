@@ -46,52 +46,30 @@ defmodule RecipeForgeWeb.CoreComponents do
 
   def modal(assigns) do
     ~H"""
-    <div
+    <dialog
       id={@id}
+      class="modal"
       phx-mounted={@show && show_modal(@id)}
       phx-remove={hide_modal(@id)}
-      data-cancel={JS.exec(@on_cancel, "phx-remove")}
-      class="relative z-50 hidden"
+      role="dialog"
+      aria-labelledby={"#{@id}-title"}
+      aria-describedby={"#{@id}-description"}
+      aria-modal="true"
     >
-      <div id={"#{@id}-bg"} class="bg-zinc-50/90 fixed inset-0 transition-opacity" aria-hidden="true" />
-      <div
-        class="fixed inset-0 overflow-y-auto"
-        aria-labelledby={"#{@id}-title"}
-        aria-describedby={"#{@id}-description"}
-        role="dialog"
-        aria-modal="true"
-        tabindex="0"
-      >
-        <div class="flex min-h-full items-center justify-center">
-          <div class={["w-full p-4", @container_class]}>
-            <.focus_wrap
-              id={"#{@id}-container"}
-              phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
-              phx-key="escape"
-              phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
-              class={[
-                "shadow-zinc-700/10 ring-zinc-700/10 relative hidden rounded-2xl bg-white shadow-lg ring-1 transition",
-                @panel_class
-              ]}
-            >
-              <div :if={@show_close} class="absolute top-6 right-5">
-                <button
-                  phx-click={JS.exec("data-cancel", to: "##{@id}")}
-                  type="button"
-                  class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
-                  aria-label={gettext("close")}
-                >
-                  <.icon name="hero-x-mark-solid" class="h-5 w-5" />
-                </button>
-              </div>
-              <div id={"#{@id}-content"}>
-                {render_slot(@inner_block)}
-              </div>
-            </.focus_wrap>
-          </div>
+      <div class={["modal-box", @container_class]}>
+        <form :if={@show_close} method="dialog">
+          <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+            <.icon name="hero-x-mark-solid" class="h-5 w-5" />
+          </button>
+        </form>
+        <div id={"#{@id}-content"}>
+          {render_slot(@inner_block)}
         </div>
       </div>
-    </div>
+      <form method="dialog" class="modal-backdrop">
+        <button phx-click={@on_cancel}>close</button>
+      </form>
+    </dialog>
     """
   end
 
@@ -128,14 +106,7 @@ defmodule RecipeForgeWeb.CoreComponents do
 
   def confirmation_modal(assigns) do
     ~H"""
-    <.modal
-      id={@id}
-      show={@show}
-      show_close={false}
-      on_cancel={@on_cancel}
-      container_class="max-w-md"
-      panel_class="!p-6"
-    >
+    <.modal id={@id} show={@show} show_close={false} on_cancel={@on_cancel} container_class="max-w-md">
       <div class="text-center">
         <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 mb-4">
           <.icon name="hero-exclamation-triangle" class="h-6 w-6 text-red-600" />
@@ -149,13 +120,17 @@ defmodule RecipeForgeWeb.CoreComponents do
           {@message}
         </p>
 
-        <div class="flex gap-3 justify-center">
-          <button type="button" phx-click={JS.exec(@on_cancel, "phx-remove")} class="btn btn-ghost">
+        <div class="modal-action flex gap-3 justify-center">
+          <button
+            type="button"
+            phx-click={JS.concat(@on_cancel, hide_modal(@id))}
+            class="btn btn-ghost"
+          >
             {@cancel_text}
           </button>
           <button
             type="button"
-            phx-click={JS.exec(@on_confirm, "phx-remove")}
+            phx-click={JS.concat(@on_confirm, hide_modal(@id))}
             class={[
               "btn",
               if(@danger, do: "btn-error", else: "btn-primary")
@@ -725,28 +700,11 @@ defmodule RecipeForgeWeb.CoreComponents do
   end
 
   def show_modal(js \\ %JS{}, id) when is_binary(id) do
-    js
-    |> JS.show(to: "##{id}")
-    |> JS.show(
-      to: "##{id}-bg",
-      time: 300,
-      transition: {"transition-all transform ease-out duration-300", "opacity-0", "opacity-100"}
-    )
-    |> show("##{id}-container")
-    |> JS.add_class("overflow-hidden", to: "body")
-    |> JS.focus_first(to: "##{id}-content")
+    JS.dispatch(js, "show-modal", to: "##{id}", detail: %{id: id})
   end
 
   def hide_modal(js \\ %JS{}, id) do
-    js
-    |> JS.hide(
-      to: "##{id}-bg",
-      transition: {"transition-all transform ease-in duration-200", "opacity-100", "opacity-0"}
-    )
-    |> hide("##{id}-container")
-    |> JS.hide(to: "##{id}", transition: {"block", "block", "hidden"})
-    |> JS.remove_class("overflow-hidden", to: "body")
-    |> JS.pop_focus()
+    JS.dispatch(js, "hide-modal", to: "##{id}", detail: %{id: id})
   end
 
   @doc """

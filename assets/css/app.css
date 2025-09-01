@@ -48,3 +48,111 @@
   -ms-user-select: auto;
   user-select: auto;
 }
+
+/* Consolidated Styles */
+
+/* Layout */
+.page-container {
+  @apply flex flex-col lg:flex-row gap-6 mt-6;
+}
+.sidebar {
+  @apply lg:w-1/4 w-full;
+}
+.main-content {
+  @apply lg:w-3/4 w-full;
+}
+.content-card {
+  @apply card bg-base-100 shadow-xl;
+}
+.recipe-grid {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-6;
+}
+.ingredients-section {
+  @apply md:col-span-1;
+}
+.instructions-section {
+  @apply md:col-span-2;
+}
+
+/* Typography */
+.section-heading {
+  @apply text-xl font-semibold mb-4;
+}
+.recipe-title {
+  @apply text-4xl font-bold;
+}
+.recipe-description {
+  @apply text-lg;
+}
+.content-subtitle {
+  @apply text-base-content/70 text-sm;
+}
+.info-title {
+  @apply font-semibold mb-2;
+}
+.info-details {
+  @apply text-sm space-y-1;
+}
+
+/* Buttons */
+.button-favorite-card {
+  @apply absolute top-2 right-2 btn btn-circle btn-ghost btn-sm bg-white/80 hover:bg-white/90;
+}
+.button-favorite-recipe-page {
+  @apply btn btn-ghost btn-circle text-red-500;
+}
+
+/* Images */
+.recipe-card-image {
+  @apply h-48 w-full object-cover;
+}
+.recipe-card-image-placeholder {
+  @apply h-48 w-full bg-gradient-to-br from-orange-200 to-pink-200 flex items-center justify-center;
+}
+
+/* Badges */
+.badge-container {
+  @apply flex flex-wrap gap-2;
+}
+
+/* Empty State */
+.empty-state {
+  @apply text-center py-12;
+}
+.empty-state-icon-container {
+  @apply mx-auto w-24 h-24 bg-base-200 rounded-full flex items-center justify-center mb-4;
+}
+.empty-state-icon {
+  @apply w-8 h-8 text-base-content/50;
+}
+.empty-state-title {
+  @apply text-lg font-medium text-base-content/70 mb-2;
+}
+.empty-state-message {
+  @apply text-base-content/50 mb-4;
+}
+
+/* Lists */
+.ingredients-list {
+  @apply list-disc list-inside space-y-1;
+}
+.instructions-list {
+  @apply list-decimal list-inside space-y-3;
+}
+.list-item-notes {
+  @apply text-gray-500;
+}
+.list-item-relaxed {
+  @apply leading-relaxed;
+}
+
+/* Containers */
+.info-container {
+  @apply mt-6;
+}
+.card-actions-row {
+  @apply card-actions justify-end mt-6 space-x-2;
+}
+.recipe-title-container {
+  @apply flex justify-between items-start mb-4;
+}

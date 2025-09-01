@@ -45,3 +45,4 @@ npm-debug.log
 /local_toolchain/*
 
 /llm_context/*
+assets/tailwind.config.js

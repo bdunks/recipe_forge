@@ -5,21 +5,21 @@
   </:subtitle>
 </.header>
 
-<div class="flex flex-col lg:flex-row gap-6 mt-6">
+<div class="page-container">
   <!-- Left Sidebar - Categories -->
-  <div class="lg:w-1/4 w-full">
-    <div class="card bg-base-100 shadow-xl">
+  <div class="sidebar">
+    <div class="content-card">
       <div class="card-body">
-        <h2 class="card-title text-lg mb-4">Categories</h2>
+        <h2 class="section-heading">Categories</h2>
 
-        <ul class="menu menu-compact w-full">
+        <ul class="sidebar-menu">
           <!-- All Recipes Option -->
           <li class={if @selected_category_id == nil, do: "bordered", else: ""}>
             <a
               phx-click="filter_by_category"
               phx-value-category_id=""
               class={[
-                "flex justify-between items-center",
+                "sidebar-menu-item-link",
                 if(@selected_category_id == nil, do: "active", else: "")
               ]}
             >
@@ -37,7 +37,7 @@
                 phx-click="filter_by_category"
                 phx-value-category_id={category.id}
                 class={[
-                  "flex justify-between items-center",
+                  "sidebar-menu-item-link",
                   if(@selected_category_id == category.id, do: "active", else: "")
                 ]}
               >
@@ -54,12 +54,12 @@
   </div>
   
 <!-- Right Content - Recipe Grid -->
-  <div class="lg:w-3/4 w-full">
-    <div class="mb-4">
-      <h3 class="text-xl font-semibold">
+  <div class="main-content">
+    <div class="content-header">
+      <h3 class="content-title">
         {@selected_category_name} Recipes
       </h3>
-      <p class="text-base-content/70 text-sm">
+      <p class="content-subtitle">
         <%= case @selected_category_id do %>
           <% nil -> %>
             Showing all recipes
@@ -72,14 +72,14 @@
     <RecipeForgeWeb.RecipeCardGrid.recipe_card_grid recipes={@recipes} />
     <!-- Empty State -->
     <%= if @empty_recipes do %>
-      <div class="text-center py-12">
-        <div class="mx-auto w-24 h-24 bg-base-200 rounded-full flex items-center justify-center mb-4">
-          <.icon name="hero-magnifying-glass" class="w-8 h-8 text-base-content/50" />
+      <div class="empty-state">
+        <div class="empty-state-icon-container">
+          <.icon name="hero-magnifying-glass" class="empty-state-icon" />
         </div>
-        <h3 class="text-lg font-medium text-base-content/70 mb-2">
+        <h3 class="empty-state-title">
           No recipes found
         </h3>
-        <p class="text-base-content/50 mb-4">
+        <p class="empty-state-message">
           <%= case @selected_category_id do %>
             <% nil -> %>
               You haven't created any recipes yet.

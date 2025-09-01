@@ -1,16 +1,16 @@
-<div class="card bg-base-100 shadow-xl max-w-4xl mx-auto">
+<div class="page-card">
   <div class="card-body">
-    <div class="flex justify-between items-start mb-4">
+    <div class="recipe-title-container">
       <div>
-        <h1 class="text-4xl font-bold">{@recipe.name}</h1>
-        <div class="flex flex-wrap gap-2 mt-2">
+        <h1 class="recipe-title">{@recipe.name}</h1>
+        <div class="badge-container mt-2">
           <%= for category <- @recipe.categories do %>
             <div class="badge badge-outline">{category.name}</div>
           <% end %>
         </div>
       </div>
       <button
-        class="btn btn-ghost btn-circle text-red-500"
+        class="button-favorite-recipe-page"
         phx-click="toggle_favorite"
         phx-value-id={@recipe.id}
         title={if @recipe.is_favorite, do: "Remove from Favorites", else: "Add to Favorites"}
@@ -24,29 +24,29 @@
     </div>
 
     <%= if @recipe.description do %>
-      <p class="text-lg">{@recipe.description}</p>
+      <p class="recipe-description">{@recipe.description}</p>
     <% end %>
 
     <div class="divider"></div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="md:col-span-1">
-        <h3 class="text-xl font-semibold mb-4">Ingredients</h3>
-        <ul class="list-disc list-inside space-y-1">
+    <div class="recipe-grid">
+      <div class="ingredients-section">
+        <h3 class="section-heading">Ingredients</h3>
+        <ul class="ingredients-list">
           <%= for ri <- @recipe.recipe_ingredients do %>
             <li>
               {ri.quantity} {ri.unit} {ri.ingredient.name}
               <%= if ri.notes do %>
-                <span class="text-gray-500">- {ri.notes}</span>
+                <span class="list-item-notes">- {ri.notes}</span>
               <% end %>
             </li>
           <% end %>
         </ul>
 
         <%= if @recipe.prep_time || @recipe.cook_time || @recipe.servings do %>
-          <div class="mt-6">
-            <h4 class="font-semibold mb-2">Recipe Info</h4>
-            <div class="text-sm space-y-1">
+          <div class="info-container">
+            <h4 class="info-title">Recipe Info</h4>
+            <div class="info-details">
               <%= if @recipe.prep_time do %>
                 <div>Prep: {@recipe.prep_time} min</div>
               <% end %>
@@ -64,24 +64,24 @@
         <% end %>
       </div>
 
-      <div class="md:col-span-2">
-        <h3 class="text-xl font-semibold mb-4">Instructions</h3>
-        <ol class="list-decimal list-inside space-y-3">
+      <div class="instructions-section">
+        <h3 class="section-heading">Instructions</h3>
+        <ol class="instructions-list">
           <%= for instruction <- @recipe.instructions do %>
-            <li class="leading-relaxed">{instruction}</li>
+            <li class="list-item-relaxed">{instruction}</li>
           <% end %>
         </ol>
 
         <%= if @recipe.notes do %>
-          <div class="mt-6">
-            <h4 class="font-semibold mb-2">Notes</h4>
-            <p class="text-gray-700">{@recipe.notes}</p>
+          <div class="info-container">
+            <h4 class="info-title">Notes</h4>
+            <p class="notes-text">{@recipe.notes}</p>
           </div>
         <% end %>
       </div>
     </div>
 
-    <div class="card-actions justify-end mt-6 space-x-2">
+    <div class="card-actions-row">
       <!-- Delete button -->
       <.live_component
         module={RecipeForgeWeb.DeleteRecipeComponent}

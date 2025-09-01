@@ -21,19 +21,16 @@ defmodule RecipeForgeWeb.RecipeCard do
             :if={@recipe.image_url}
             src={@recipe.image_url}
             alt={@recipe.name}
-            class="h-48 w-full object-cover"
+            class="recipe-card-image"
           />
-          <div
-            :if={is_nil(@recipe.image_url)}
-            class="h-48 w-full bg-gradient-to-br from-orange-200 to-pink-200 flex items-center justify-center"
-          >
+          <div :if={is_nil(@recipe.image_url)} class="recipe-card-image-placeholder">
             <.icon name="hero-camera" class="h-12 w-12 text-gray-400" />
           </div>
         </figure>
         <div class="card-body">
           <h2 class="card-title text-lg font-semibold">{@recipe.name}</h2>
           <div class="card-actions justify-between items-center">
-            <div class="flex flex-wrap gap-1">
+            <div class="badge-container">
               <div :for={category <- @recipe.categories} class="badge badge-outline text-xs">
                 {category.name}
               </div>
@@ -53,7 +50,7 @@ defmodule RecipeForgeWeb.RecipeCard do
       <button
         phx-click="toggle_favorite"
         phx-value-id={@recipe.id}
-        class="absolute top-2 right-2 btn btn-circle btn-ghost btn-sm bg-white/80 hover:bg-white/90"
+        class="button-favorite-card"
         title={
           if Map.get(@recipe, :is_favorite, false),
             do: "Remove from favorites",

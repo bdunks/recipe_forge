@@ -60,6 +60,20 @@ topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
 window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
 window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 
+window.addEventListener("show-modal", (event) => {
+  const modal = document.getElementById(event.detail.id);
+  if (modal) {
+    modal.showModal();
+  }
+});
+
+window.addEventListener("hide-modal", (event) => {
+  const modal = document.getElementById(event.detail.id);
+  if (modal) {
+    modal.close();
+  }
+});
+
 // connect if there are any LiveViews on the page
 liveSocket.connect()
 
