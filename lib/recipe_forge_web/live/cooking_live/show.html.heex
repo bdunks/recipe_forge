@@ -1,105 +1,109 @@
 <div class="fixed inset-0 bg-base-100 z-50 flex flex-col">
-  <!-- Header Bar -->
-  <div class="flex-none flex justify-between items-center p-4 border-b border-base-300">
-    <.link navigate={~p"/recipes/#{@recipe.id}"} class="btn btn-ghost">
-      <.icon name="hero-arrow-left" class="h-5 w-5" /> Back
-    </.link>
+    <!-- Header Bar -->
+    <div class="flex-none flex justify-between items-center p-4 border-b border-base-300">
+      <.link navigate={~p"/recipes/#{@recipe.id}"} class="btn btn-ghost">
+        <.icon name="hero-arrow-left" class="h-5 w-5" /> Back
+      </.link>
 
-    <h1 class="text-lg md:text-xl font-bold text-center flex-1 mx-4 truncate">
-      {@recipe.name}
-    </h1>
-  </div>
-  
-<!-- Main Content -->
-  <div class="flex-1 overflow-y-auto p-4 pb-20">
-    <!-- Ingredients Section -->
-    <div class="mb-8">
-      <h2 class="text-xl font-bold mb-4 flex items-center">
-        <.icon name="hero-list-bullet" class="h-6 w-6 mr-2" /> Ingredients
-      </h2>
-      <div class="bg-base-200 rounded-lg p-4">
-        <ul class="space-y-2">
-          <%= for ri <- @recipe.recipe_ingredients do %>
-            <li class="flex items-center">
-              <input type="checkbox" class="checkbox checkbox-sm mr-3" />
-              <span class="text-lg">
-                <span class="font-medium">{ri.quantity} {ri.unit}</span>
-                {ri.ingredient.name}
-                <%= if ri.notes do %>
-                  <span class="text-gray-500 text-sm">- {ri.notes}</span>
-                <% end %>
-              </span>
-            </li>
-          <% end %>
-        </ul>
-      </div>
+      <h1 class="text-lg md:text-xl font-bold text-center flex-1 mx-4 truncate">
+        {@recipe.name}
+      </h1>
     </div>
-
-    <div class="divider"></div>
     
-<!-- Current Step -->
-    <div class="mb-8">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-2xl font-bold">
-          Step {@current_step} of {@total_steps}
+<!-- Main Content -->
+    <div class="flex-1 overflow-y-auto p-4 pb-20">
+      <!-- Ingredients Section -->
+      <div class="mb-8">
+        <h2 class="text-xl font-bold mb-4 flex items-center">
+          <.icon name="hero-list-bullet" class="h-6 w-6 mr-2" /> Ingredients
         </h2>
-        <div class="dropdown dropdown-end">
-          <div tabindex="0" role="button" class="btn btn-ghost btn-sm">
-            Jump to step <.icon name="hero-chevron-down" class="h-4 w-4" />
-          </div>
-          <ul
-            tabindex="0"
-            class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-32"
-          >
-            <%= for step <- 1..@total_steps do %>
-              <li>
-                <a
-                  phx-click="go_to_step"
-                  phx-value-step={step}
-                  class={if step == @current_step, do: "active", else: ""}
-                >
-                  Step {step}
-                </a>
+        <div class="bg-base-200 rounded-lg p-4">
+          <ul class="space-y-2">
+            <%= for ri <- @recipe.recipe_ingredients do %>
+              <li class="flex items-center">
+                <input type="checkbox" class="checkbox checkbox-sm mr-3" />
+                <span class="text-lg">
+                  <span class="font-medium">{ri.quantity} {ri.unit}</span>
+                  {ri.ingredient.name}
+                  <%= if ri.notes do %>
+                    <span class="text-gray-500 text-sm">- {ri.notes}</span>
+                  <% end %>
+                </span>
               </li>
             <% end %>
           </ul>
         </div>
       </div>
 
-      <div class="bg-base-200 rounded-lg p-6">
-        <p class="text-xl leading-relaxed">
-          {current_instruction(@recipe, @current_step)}
-        </p>
+      <div class="divider"></div>
+      
+<!-- Current Step -->
+      <div class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold">
+            Step {@current_step} of {@total_steps}
+          </h2>
+          <div class="dropdown dropdown-end">
+            <div tabindex="0" role="button" class="btn btn-ghost btn-sm">
+              Jump to step <.icon name="hero-chevron-down" class="h-4 w-4" />
+            </div>
+            <ul
+              tabindex="0"
+              class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-32"
+            >
+              <%= for step <- 1..@total_steps do %>
+                <li>
+                  <a
+                    phx-click="go_to_step"
+                    phx-value-step={step}
+                    class={if step == @current_step, do: "active", else: ""}
+                  >
+                    Step {step}
+                  </a>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+
+        <div class="bg-base-200 rounded-lg p-6">
+          <p class="text-xl leading-relaxed">
+            {current_instruction(@recipe, @current_step)}
+          </p>
+        </div>
+      </div>
+      
+<!-- Step Progress -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between text-sm text-gray-500 mb-2">
+          <span>Progress</span>
+          <span>{@current_step}/{@total_steps}</span>
+        </div>
+        <progress
+          class="progress progress-primary w-full"
+          value={@current_step}
+          max={@total_steps}
+        >
+        </progress>
       </div>
     </div>
     
-<!-- Step Progress -->
-    <div class="mb-6">
-      <div class="flex items-center justify-between text-sm text-gray-500 mb-2">
-        <span>Progress</span>
-        <span>{@current_step}/{@total_steps}</span>
-      </div>
-      <progress class="progress progress-primary w-full" value={@current_step} max={@total_steps}>
-      </progress>
-    </div>
-  </div>
-  
 <!-- Bottom Navigation -->
-  <div class="flex-none p-4 border-t border-base-300 bg-base-100">
-    <div class="flex gap-3">
-      <button phx-click="prev_step" class="btn btn-outline flex-1" disabled={@current_step == 1}>
-        <.icon name="hero-chevron-left" class="h-5 w-5" /> Previous
-      </button>
-
-      <%= if @current_step < @total_steps do %>
-        <button phx-click="next_step" class="btn btn-primary flex-1">
-          Next Step <.icon name="hero-chevron-right" class="h-5 w-5" />
+    <div class="flex-none p-4 border-t border-base-300 bg-base-100">
+      <div class="flex gap-3">
+        <button phx-click="prev_step" class="btn btn-outline flex-1" disabled={@current_step == 1}>
+          <.icon name="hero-chevron-left" class="h-5 w-5" /> Previous
         </button>
-      <% else %>
-        <.link navigate={~p"/recipes/#{@recipe.id}"} class="btn btn-success flex-1">
-          <.icon name="hero-check" class="h-5 w-5" /> Complete
-        </.link>
-      <% end %>
+
+        <%= if @current_step < @total_steps do %>
+          <button phx-click="next_step" class="btn btn-primary flex-1">
+            Next Step <.icon name="hero-chevron-right" class="h-5 w-5" />
+          </button>
+        <% else %>
+          <.link navigate={~p"/recipes/#{@recipe.id}"} class="btn btn-success flex-1">
+            <.icon name="hero-check" class="h-5 w-5" /> Complete
+          </.link>
+        <% end %>
+      </div>
     </div>
   </div>
-</div>

@@ -52,8 +52,7 @@ defmodule RecipeForgeWeb do
 
   def live_view do
     quote do
-      use Phoenix.LiveView,
-        layout: {RecipeForgeWeb.Layouts, :app}
+      use Phoenix.LiveView
 
       unquote(html_helpers())
     end
@@ -90,8 +89,9 @@ defmodule RecipeForgeWeb do
       # Core UI components
       import RecipeForgeWeb.CoreComponents
 
-      # Shortcut for generating JS commands
+      # Common modules used in templates
       alias Phoenix.LiveView.JS
+      alias RecipeForgeWeb.Layouts
 
       # Routes generation with the ~p sigil
       unquote(verified_routes())

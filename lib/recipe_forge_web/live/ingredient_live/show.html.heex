@@ -1,31 +1,33 @@
-<.header>
-  Ingredient {@ingredient.id}
-  <:subtitle>This is a ingredient record from your database.</:subtitle>
-  <:actions>
-    <.link patch={~p"/ingredients/#{@ingredient}/show/edit"} phx-click={JS.push_focus()}>
-      <.button>Edit ingredient</.button>
-    </.link>
-  </:actions>
-</.header>
+<Layouts.app flash={@flash}>
+  <.header>
+    Ingredient {@ingredient.id}
+    <:subtitle>This is a ingredient record from your database.</:subtitle>
+    <:actions>
+      <.link patch={~p"/ingredients/#{@ingredient}/show/edit"} phx-click={JS.push_focus()}>
+        <.button>Edit ingredient</.button>
+      </.link>
+    </:actions>
+  </.header>
 
-<.list>
-  <:item title="Name">{@ingredient.name}</:item>
-</.list>
+  <.list>
+    <:item title="Name">{@ingredient.name}</:item>
+  </.list>
 
-<.back navigate={~p"/ingredients"}>Back to ingredients</.back>
+  <.back navigate={~p"/ingredients"}>Back to ingredients</.back>
 
-<.modal
-  :if={@live_action == :edit}
-  id="ingredient-modal"
-  show
-  on_cancel={JS.patch(~p"/ingredients/#{@ingredient}")}
->
-  <.live_component
-    module={RecipeForgeWeb.IngredientLive.FormComponent}
-    id={@ingredient.id}
-    title={@page_title}
-    action={@live_action}
-    ingredient={@ingredient}
-    patch={~p"/ingredients/#{@ingredient}"}
-  />
-</.modal>
+  <.modal
+    :if={@live_action == :edit}
+    id="ingredient-modal"
+    show
+    on_cancel={JS.patch(~p"/ingredients/#{@ingredient}")}
+  >
+    <.live_component
+      module={RecipeForgeWeb.IngredientLive.FormComponent}
+      id={@ingredient.id}
+      title={@page_title}
+      action={@live_action}
+      ingredient={@ingredient}
+      patch={~p"/ingredients/#{@ingredient}"}
+    />
+  </.modal>
+</Layouts.app>

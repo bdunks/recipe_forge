@@ -1,4 +1,4 @@
-# CLAUDE.md
+# GEMINI.md
 
 ## CRITICAL: MANDATORY INSTRUCTIONS FOR ALL DEVELOPMENT
 
@@ -11,7 +11,6 @@
 **YOU MUST READ:** @.agents/DEVELOPMENT_WORKFLOW.md
 
 **NON-NEGOTIABLE REQUIREMENTS:**
-
 - **ALWAYS use MCP tools as your FIRST resort** - Never use grep/find/manual file searching when MCP alternatives exist
 - **ALWAYS use `mcp__tidewave__get_ecto_schemas`** instead of grepping for schemas
 - **ALWAYS use `mcp__tidewave__get_source_location`** instead of find/grep for modules
@@ -29,7 +28,6 @@
 **YOU MUST READ:** @.agents/ARCHITECTURE_GUIDELINES.md
 
 **NON-NEGOTIABLE REQUIREMENTS:**
-
 - Follow all Phoenix 1.8 patterns exactly as specified
 - Use correct authentication scopes and `@current_scope.user` patterns
 - Follow naming conventions for CRUD functions, events, and assigns

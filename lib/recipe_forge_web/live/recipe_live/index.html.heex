@@ -1,38 +1,40 @@
-<!-- Quick Create Section -->
-<div class="card bg-base-100 shadow-xl mb-6">
-  <div class="card-body">
-    <h2 class="card-title">Quick Create</h2>
-    <p>Instantly create a new recipe from anywhere.</p>
-    <.form
-      for={@url_form}
-      phx-submit="generate_from_url"
-      class="card-actions justify-start mt-2 items-center flex-wrap gap-2"
-    >
-      <.input
-        field={@url_form[:url]}
-        placeholder="https://example.com/recipe"
-        class="input input-bordered w-full max-w-xs"
-      />
-      <.button type="submit" class="btn btn-primary">Generate Draft</.button>
-    </.form>
+<Layouts.app flash={@flash}>
+  <!-- Quick Create Section -->
+  <div class="card bg-base-100 shadow-xl mb-6">
+    <div class="card-body">
+      <h2 class="card-title">Quick Create</h2>
+      <p>Instantly create a new recipe from anywhere.</p>
+      <.form
+        for={@url_form}
+        phx-submit="generate_from_url"
+        class="card-actions justify-start mt-2 items-center flex-wrap gap-2"
+      >
+        <.input
+          field={@url_form[:url]}
+          placeholder="https://example.com/recipe"
+          class="input input-bordered w-full max-w-xs"
+        />
+        <.button type="submit" class="btn btn-primary">Generate Draft</.button>
+      </.form>
+    </div>
   </div>
-</div>
-
+  
 <!-- Recipe Grid -->
-<RecipeForgeWeb.RecipeCardGrid.recipe_card_grid recipes={@recipes} />
+  <RecipeForgeWeb.RecipeCardGrid.recipe_card_grid recipes={@recipes} />
 
-<.modal
-  :if={@live_action in [:new, :edit]}
-  id="recipe-modal"
-  show
-  on_cancel={JS.patch(~p"/recipes")}
->
-  <.live_component
-    module={RecipeForgeWeb.RecipeLive.FormComponent}
-    id={@recipe.id || :new}
-    title={@page_title}
-    action={@live_action}
-    recipe={@recipe}
-    patch={~p"/recipes"}
-  />
-</.modal>
+  <.modal
+    :if={@live_action in [:new, :edit]}
+    id="recipe-modal"
+    show
+    on_cancel={JS.patch(~p"/recipes")}
+  >
+    <.live_component
+      module={RecipeForgeWeb.RecipeLive.FormComponent}
+      id={@recipe.id || :new}
+      title={@page_title}
+      action={@live_action}
+      recipe={@recipe}
+      patch={~p"/recipes"}
+    />
+  </.modal>
+</Layouts.app>

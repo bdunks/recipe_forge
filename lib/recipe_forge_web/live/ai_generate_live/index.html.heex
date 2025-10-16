@@ -1,114 +1,124 @@
-<.header class="mb-6">
-  AI Recipe Generator
-  <:subtitle>Enter a recipe idea and let AI generate it!</:subtitle>
-</.header>
+<Layouts.app flash={@flash}>
+  <.header class="mb-6">
+    AI Recipe Generator
+    <:subtitle>Enter a recipe idea and let AI generate it!</:subtitle>
+  </.header>
 
-<.simple_form for={nil} id="generate-form" phx-submit="generate" class="mb-6">
-  <label for="prompt-input" class="block text-sm font-medium text-gray-700">
-    Recipe Idea (e.g., classic pancakes, spicy chicken tacos)
-  </label>
-  <%!-- Ensure the name matches what handle_event expects, if not using "prompt" from changeset --%>
-  <input
-    type="text"
-    name="prompt"
-    id="prompt-input"
-    value={@prompt}
-    required={true}
-    disabled={@loading}
-    phx-debounce="300"
-    autocomplete="off"
-    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-    aria-describedby={if @errors && @errors[:prompt], do: "prompt-error"}
-  />
+  <.simple_form for={nil} id="generate-form" phx-submit="generate" class="mb-6">
+    <label for="prompt-input" class="block text-sm font-medium text-gray-700">
+      Recipe Idea (e.g., classic pancakes, spicy chicken tacos)
+    </label>
+    <%!-- Ensure the name matches what handle_event expects, if not using "prompt" from changeset --%>
+    <input
+      type="text"
+      name="prompt"
+      id="prompt-input"
+      value={@prompt}
+      required={true}
+      disabled={@loading}
+      phx-debounce="300"
+      autocomplete="off"
+      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+      aria-describedby={if @errors && @errors[:prompt], do: "prompt-error"}
+    />
 
-  <div :if={prompt_errors = @errors && @errors[:prompt]} id="prompt-error" class="mt-1">
-    <p :for={error_message <- prompt_errors} class="text-sm text-red-600">
-      {error_message}
-    </p>
-  </div>
+    <div :if={prompt_errors = @errors && @errors[:prompt]} id="prompt-error" class="mt-1">
+      <p :for={error_message <- prompt_errors} class="text-sm text-red-600">
+        {error_message}
+      </p>
+    </div>
 
-  <:actions>
-    <.button type="submit" phx-disable-with="Generating..." disabled={@loading} class="mt-2">
-      {if @loading && is_nil(@generated_recipe_data) && is_nil(@errors),
-        do: "Generating...",
-        else: "Generate Recipe"}
-    </.button>
-  </:actions>
-</.simple_form>
-
-<%!-- Display Errors --%>
-<div
-  :if={@errors && map_size(@errors) > 0}
-  class="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded"
->
-  <p><b>Please fix the following issue(s):</b></p>
-  <ul class="list-disc list-inside ml-4 space-y-1">
-    <li :for={{field, messages} <- @errors}>
-      <span class="font-semibold">{field |> Atom.to_string() |> String.capitalize()}:</span>
-      <span :for={message <- messages} class="block ml-4">
-        {message}
-      </span>
-    </li>
-  </ul>
-</div>
-
-<%!-- Display Generated Recipe & Save Button --%>
-<div :if={recipe = @generated_recipe_data} class="mt-6 border border-gray-300 p-4 rounded shadow">
-  <h2 class="text-xl font-semibold mb-2">Generated Recipe Preview</h2>
-
-  <%!-- Display basic fields --%>
-  <p><b>Name:</b> {recipe[:name] || "--"}</p>
-  <p :if={recipe[:description]}><b>Description:</b> {recipe[:description]}</p>
-  <p :if={recipe[:category_name]}><b>Category:</b> {recipe[:category_name]}</p>
-  <p :if={recipe[:prep_time]}><b>Prep Time:</b> {recipe[:prep_time]}</p>
-  <p :if={recipe[:cook_time]}><b>Cook Time:</b> {recipe[:cook_time]}</p>
-  <p :if={recipe[:servings]}><b>Servings:</b> {recipe[:servings]}</p>
-  <p :if={recipe[:yield_description]}><b>Yield:</b> {recipe[:yield_description]}</p>
-  <p :if={recipe[:image_url]}>
-    <a href={recipe[:image_url]} target="_blank" class="text-blue-600 hover:underline">
-      Image Link
-    </a>
-  </p>
-  <p :if={recipe[:notes]}><b>Notes:</b> {recipe[:notes]}</p>
-  <p :if={recipe[:nutrition] && map_size(recipe[:nutrition]) > 0}>
-    <b>Nutrition:</b> <pre><%= Jason.encode!(recipe[:nutrition], pretty: true) %></pre>
-  </p>
-
-  <%!-- Display Ingredients --%>
-  <h4 class="font-semibold mt-3">Ingredients:</h4>
-  <ul :if={recipe[:ingredients] && recipe[:ingredients] != []} class="list-disc list-inside ml-4">
-    <li :for={ingredient <- recipe[:ingredients]}>
-      {ingredient[:quantity]} {ingredient[:unit]} {ingredient[:name]}
-      <span :if={ingredient[:notes]} class="text-gray-500 text-sm italic">
-        - {ingredient[:notes]}
-      </span>
-    </li>
-  </ul>
-  <p :if={is_nil(recipe[:ingredients]) or recipe[:ingredients] == []}>No ingredients provided.</p>
-
-  <%!-- Display Instructions --%>
-  <h4 class="font-semibold mt-3">Instructions:</h4>
-  <ol
-    :if={recipe[:instructions] && recipe[:instructions] != []}
-    class="list-decimal list-inside ml-4 space-y-1"
-  >
-    <li :for={instruction <- recipe[:instructions]}>{instruction}</li>
-  </ol>
-  <p :if={is_nil(recipe[:instructions]) or recipe[:instructions] == []}>
-    No instructions provided.
-  </p>
-
-  <%!-- Save Button Form --%>
-  <div class="mt-6">
-    <.simple_form for={nil} id="save-form" phx-submit="save">
-      <.button
-        type="submit"
-        phx-disable-with="Saving..."
-        disabled={@loading}
-        class="button-primary"
-      >
-        {if @loading, do: "Saving...", else: "Save This Recipe"}
+    <:actions>
+      <.button type="submit" phx-disable-with="Generating..." disabled={@loading} class="mt-2">
+        {if @loading && is_nil(@generated_recipe_data) && is_nil(@errors),
+          do: "Generating...",
+          else: "Generate Recipe"}
       </.button>
-    </.simple_form>
+    </:actions>
+  </.simple_form>
+
+  <%!-- Display Errors --%>
+  <div
+    :if={@errors && map_size(@errors) > 0}
+    class="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded"
+  >
+    <p><b>Please fix the following issue(s):</b></p>
+    <ul class="list-disc list-inside ml-4 space-y-1">
+      <li :for={{field, messages} <- @errors}>
+        <span class="font-semibold">{field |> Atom.to_string() |> String.capitalize()}:</span>
+        <span :for={message <- messages} class="block ml-4">
+          {message}
+        </span>
+      </li>
+    </ul>
   </div>
-</div>
+
+  <%!-- Display Generated Recipe & Save Button --%>
+  <div
+    :if={recipe = @generated_recipe_data}
+    class="mt-6 border border-gray-300 p-4 rounded shadow"
+  >
+    <h2 class="text-xl font-semibold mb-2">Generated Recipe Preview</h2>
+
+    <%!-- Display basic fields --%>
+    <p><b>Name:</b> {recipe[:name] || "--"}</p>
+    <p :if={recipe[:description]}><b>Description:</b> {recipe[:description]}</p>
+    <p :if={recipe[:category_name]}><b>Category:</b> {recipe[:category_name]}</p>
+    <p :if={recipe[:prep_time]}><b>Prep Time:</b> {recipe[:prep_time]}</p>
+    <p :if={recipe[:cook_time]}><b>Cook Time:</b> {recipe[:cook_time]}</p>
+    <p :if={recipe[:servings]}><b>Servings:</b> {recipe[:servings]}</p>
+    <p :if={recipe[:yield_description]}><b>Yield:</b> {recipe[:yield_description]}</p>
+    <p :if={recipe[:image_url]}>
+      <a href={recipe[:image_url]} target="_blank" class="text-blue-600 hover:underline">
+        Image Link
+      </a>
+    </p>
+    <p :if={recipe[:notes]}><b>Notes:</b> {recipe[:notes]}</p>
+    <p :if={recipe[:nutrition] && map_size(recipe[:nutrition]) > 0}>
+      <b>Nutrition:</b> <pre><%= Jason.encode!(recipe[:nutrition], pretty: true) %></pre>
+    </p>
+
+    <%!-- Display Ingredients --%>
+    <h4 class="font-semibold mt-3">Ingredients:</h4>
+    <ul
+      :if={recipe[:ingredients] && recipe[:ingredients] != []}
+      class="list-disc list-inside ml-4"
+    >
+      <li :for={ingredient <- recipe[:ingredients]}>
+        {ingredient[:quantity]} {ingredient[:unit]} {ingredient[:name]}
+        <span :if={ingredient[:notes]} class="text-gray-500 text-sm italic">
+          - {ingredient[:notes]}
+        </span>
+      </li>
+    </ul>
+    <p :if={is_nil(recipe[:ingredients]) or recipe[:ingredients] == []}>
+      No ingredients provided.
+    </p>
+
+    <%!-- Display Instructions --%>
+    <h4 class="font-semibold mt-3">Instructions:</h4>
+    <ol
+      :if={recipe[:instructions] && recipe[:instructions] != []}
+      class="list-decimal list-inside ml-4 space-y-1"
+    >
+      <li :for={instruction <- recipe[:instructions]}>{instruction}</li>
+    </ol>
+    <p :if={is_nil(recipe[:instructions]) or recipe[:instructions] == []}>
+      No instructions provided.
+    </p>
+
+    <%!-- Save Button Form --%>
+    <div class="mt-6">
+      <.simple_form for={nil} id="save-form" phx-submit="save">
+        <.button
+          type="submit"
+          phx-disable-with="Saving..."
+          disabled={@loading}
+          class="button-primary"
+        >
+          {if @loading, do: "Saving...", else: "Save This Recipe"}
+        </.button>
+      </.simple_form>
+    </div>
+  </div>
+</Layouts.app>

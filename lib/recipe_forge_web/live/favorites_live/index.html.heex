@@ -1,30 +1,32 @@
-<h1 class="text-3xl font-bold mb-6">Favorite Recipes</h1>
+<Layouts.app flash={@flash}>
+  <h1 class="text-3xl font-bold mb-6">Favorite Recipes</h1>
 
-<%= if @has_favorites do %>
-  <RecipeForgeWeb.RecipeCardGrid.recipe_card_grid recipes={@recipes} />
-<% else %>
-  <!-- Empty State -->
-  <div class="text-center py-16">
-    <div class="mx-auto w-24 h-24 bg-base-200 rounded-full flex items-center justify-center mb-6">
-      <.icon name="hero-heart" class="w-12 h-12 text-red-300" />
-    </div>
-    <h2 class="text-2xl font-semibold text-gray-700 mb-4">
-      No Favorite Recipes Yet
-    </h2>
-    <p class="text-gray-500 mb-8 max-w-md mx-auto">
-      Start building your collection of favorite recipes by clicking the heart icon on any recipe you love.
-    </p>
-
-    <div class="space-y-4">
-      <.link navigate={~p"/"} class="btn btn-primary">
-        Browse Recipes
-      </.link>
-      <div class="text-sm text-gray-400">
-        or
+  <%= if @has_favorites do %>
+    <RecipeForgeWeb.RecipeCardGrid.recipe_card_grid recipes={@recipes} />
+  <% else %>
+    <!-- Empty State -->
+    <div class="text-center py-16">
+      <div class="mx-auto w-24 h-24 bg-base-200 rounded-full flex items-center justify-center mb-6">
+        <.icon name="hero-heart" class="w-12 h-12 text-red-300" />
       </div>
-      <.link navigate={~p"/recipes/new"} class="btn btn-outline">
-        Create New Recipe
-      </.link>
+      <h2 class="text-2xl font-semibold text-gray-700 mb-4">
+        No Favorite Recipes Yet
+      </h2>
+      <p class="text-gray-500 mb-8 max-w-md mx-auto">
+        Start building your collection of favorite recipes by clicking the heart icon on any recipe you love.
+      </p>
+
+      <div class="space-y-4">
+        <.link navigate={~p"/"} class="btn btn-primary">
+          Browse Recipes
+        </.link>
+        <div class="text-sm text-gray-400">
+          or
+        </div>
+        <.link navigate={~p"/recipes/new"} class="btn btn-outline">
+          Create New Recipe
+        </.link>
+      </div>
     </div>
-  </div>
-<% end %>
+  <% end %>
+</Layouts.app>
